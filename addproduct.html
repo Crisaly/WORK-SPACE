@@ -1,108 +1,146 @@
 <!DOCTYPE html>
 <html lang="en"><head><meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#0f1b2d">
 <title>FreshTrack - Data Manager</title>
+<script src="config.js"></script>
 <script src="freshtrack-api.js"></script>
 <style>
-*{box-sizing:border-box}body{font-family:system-ui,sans-serif;background:#f3f4f6;margin:0;padding:16px;color:#1f2937}
-.wrap{max-width:900px;margin:auto}h1{font-size:20px}a.back{font-size:14px}
-.tabs{display:flex;gap:6px;margin:12px 0}.tabs button{flex:1;padding:10px;border:0;border-radius:10px;background:#e5e7eb;font-weight:700;cursor:pointer}
-.tabs button.on{background:#059669;color:#fff}
-.card{background:#fff;border-radius:14px;padding:16px;box-shadow:0 2px 12px #0001;margin-bottom:14px}
-input,button.act{padding:10px;font-size:15px;border-radius:8px;border:1px solid #ccc}
-button.act{background:#059669;color:#fff;border:0;font-weight:700;cursor:pointer}button.red{background:#dc2626}button.gray{background:#6b7280}
-.row{display:flex;gap:8px;flex-wrap:wrap;margin:8px 0}.row input{flex:1;min-width:120px}
-table{width:100%;border-collapse:collapse;font-size:13px}td,th{padding:6px;border-bottom:1px solid #eee;text-align:left}
-.scroll{max-height:380px;overflow:auto}#msg{font-weight:700;min-height:1.3em;font-size:14px}
-.hint{font-size:13px;color:#6b7280}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+:root{--bg:#0b1424;--card:#13233b;--line:#223656;--txt:#e8eefc;--mut:#8da2c4;--acc:#22d3ee;--ok:#10b981;--bad:#ef4444}
+html,body{margin:0;background:var(--bg);color:var(--txt);font-family:system-ui,-apple-system,"Segoe UI",sans-serif}
+body{padding:calc(env(safe-area-inset-top) + 8px) 12px calc(88px + env(safe-area-inset-bottom))}
+.wrap{max-width:640px;margin:auto}
+.top{display:flex;align-items:center;gap:10px;padding:8px 2px 12px}
+.top a{color:var(--acc);text-decoration:none;font-weight:700;font-size:15px;padding:8px 12px;background:var(--card);border-radius:12px}
+h1{font-size:19px;margin:0;flex:1}
+.card{background:var(--card);border:1px solid var(--line);border-radius:18px;padding:14px;margin-bottom:12px}
+.card h2{font-size:13px;letter-spacing:.08em;text-transform:uppercase;color:var(--mut);margin:0 0 10px}
+input[type=text],input:not([type]),input[type=search]{width:100%;padding:14px;margin:0 0 10px;font-size:16px;border-radius:12px;border:1px solid var(--line);background:#0c1a2e;color:var(--txt);outline:none}
+input:focus{border-color:var(--acc)}
+.two{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.btn{width:100%;padding:15px;font-size:16px;font-weight:800;border:0;border-radius:14px;background:var(--ok);color:#fff;cursor:pointer;margin-top:2px}
+.btn.gray{background:#2a3f63}.btn.red{background:var(--bad)}.btn.cyan{background:#0891b2}
+.hint{font-size:13px;color:var(--mut);margin:6px 0 10px;line-height:1.4}
+#msg{position:fixed;left:12px;right:12px;top:calc(env(safe-area-inset-top) + 8px);z-index:20;padding:12px 14px;border-radius:14px;font-weight:700;font-size:14px;display:none;box-shadow:0 8px 30px #0008}
+#msg.ok{background:#065f46;display:block}#msg.bad{background:#7f1d1d;display:block}
+.file{display:block;padding:16px;border:2px dashed var(--line);border-radius:14px;text-align:center;color:var(--acc);font-weight:700;margin-bottom:10px}
+.file input{display:none}
+.chk{display:flex;gap:10px;align-items:center;font-size:14px;color:var(--mut);margin-bottom:10px}
+.chk input{width:20px;height:20px}
+.item{display:flex;align-items:center;gap:10px;padding:10px 0;border-top:1px solid var(--line)}
+.item:first-child{border-top:0}
+.thumb{width:48px;height:48px;border-radius:12px;background:#fff;display:flex;align-items:center;justify-content:center;font-size:22px;flex:none;overflow:hidden}
+.thumb img{width:100%;height:100%;object-fit:contain}
+.info{flex:1;min-width:0}.info b{display:block;font-size:14px;line-height:1.25;word-break:break-word}
+.info small{color:var(--mut);font-size:12px;word-break:break-all}
+.acts{display:flex;flex-direction:column;gap:6px;flex:none}
+.acts a{color:var(--acc);font-size:13px;font-weight:700;text-decoration:none;padding:6px 10px;background:#0c1a2e;border-radius:9px;text-align:center}
+.acts a.del{color:#fca5a5}
+nav{position:fixed;left:0;right:0;bottom:0;display:flex;gap:6px;padding:8px 10px calc(8px + env(safe-area-inset-bottom));background:#0a1220ee;backdrop-filter:blur(12px);border-top:1px solid var(--line);z-index:10}
+nav button{flex:1;padding:12px 4px;border:0;border-radius:12px;background:var(--card);color:var(--mut);font-size:13px;font-weight:800;cursor:pointer}
+nav button.on{background:var(--acc);color:#062a33}
+.cnt{color:var(--mut);font-size:13px;margin:0 0 6px}
 </style></head><body><div class="wrap">
-<a class="back" href="index.html">&larr; Back to terminal</a>
-<h1>FreshTrack Data Manager</h1>
 <div id="msg"></div>
-<div class="tabs"><button data-t="p" class="on">Products</button><button data-t="k">Pickers &amp; PINs</button><button data-t="b">Backup</button></div>
+<div class="top"><a href="index.html">&larr; Back</a><h1>Data Manager</h1></div>
 
 <div id="t-p">
- <div class="card"><b>Add / edit a product</b>
-  <div class="row"><input id="pb" placeholder="Barcode"><input id="ps" placeholder="Item code"><input id="pd" placeholder="Description" style="flex:2">
-  <input id="pi" placeholder="Image URL (optional)" style="flex:2"><input id="pl" placeholder="Location" style="max-width:100px"></div>
-  <button class="act" id="padd">Save product</button>
-  <span class="hint"> Same barcode = updates the existing product.</span></div>
- <div class="card"><b>Import from your Google Sheet</b>
-  <p class="hint">In Google Sheets: File &gt; Download &gt; CSV on the DATA tab. Columns are matched by header (Barcode, Item Code, Description, URL, LOCATION).</p>
-  <input type="file" id="csv" accept=".csv,text/csv"> <label><input type="checkbox" id="rep"> replace all existing products</label></div>
- <div class="card"><input id="q" placeholder="Search products..." style="width:100%">
-  <p class="hint" id="cnt"></p><div class="scroll"><table id="tbl"></table></div></div>
+ <div class="card"><h2>Add / edit product</h2>
+  <input id="pb" placeholder="Barcode" inputmode="numeric">
+  <div class="two"><input id="ps" placeholder="Item code"><input id="pl" placeholder="Location"></div>
+  <input id="pd" placeholder="Description">
+  <input id="pi" placeholder="Image URL (https://...)" inputmode="url">
+  <button class="btn" id="padd">Save product</button>
+  <p class="hint">Same barcode updates the existing product.</p></div>
+ <div class="card"><h2>Import from Google Sheet</h2>
+  <p class="hint">Google Sheets &rarr; File &rarr; Download &rarr; CSV (DATA tab).</p>
+  <label class="file">Choose CSV file<input type="file" id="csv" accept=".csv,text/csv"></label>
+  <label class="chk"><input type="checkbox" id="rep"> Replace all existing products</label></div>
+ <div class="card"><h2>Products</h2>
+  <input type="search" id="q" placeholder="Search products...">
+  <p class="cnt" id="cnt"></p><div id="tbl"></div></div>
 </div>
 
-<div id="t-k" style="display:none"><div class="card"><b>Pickers / operators</b>
-  <div class="row"><input id="kn" placeholder="Name"><input id="kp" placeholder="PIN" inputmode="numeric"><input id="kh" placeholder="Phone (for SMS alert)"></div>
-  <button class="act" id="kadd">Save picker</button> <span class="hint">Same name = updates PIN/phone.</span>
-  <table id="ktbl" style="margin-top:10px"></table></div></div>
-
-<div id="t-b" style="display:none"><div class="card"><b>Backup &amp; restore</b>
-  <p class="hint">Data is stored in this browser only. Download a backup regularly, and use it to move data to another phone or computer.</p>
-  <div class="row"><button class="act" id="bdl">Download full backup (.json)</button>
-  <button class="act gray" id="blog">Download order logs (.csv)</button></div>
-  <p>Restore: <input type="file" id="bup" accept=".json"></p>
-  <button class="act red" id="bclr">Erase all data on this device</button></div></div>
+<div id="t-k" style="display:none">
+ <div class="card"><h2>Add / edit picker</h2>
+  <input id="kn" placeholder="Name">
+  <div class="two"><input id="kp" placeholder="PIN" inputmode="numeric"><input id="kh" placeholder="Phone (SMS)" inputmode="tel"></div>
+  <button class="btn" id="kadd">Save picker</button>
+  <p class="hint">Rows named <b>Matrix</b> and <b>Admin</b> are the PINs for those screens. When editing, leave PIN empty to keep the current one.</p></div>
+ <div class="card"><h2>Pickers</h2><div id="ktbl"></div></div>
 </div>
+
+<div id="t-b" style="display:none">
+ <div class="card"><h2>Backup &amp; restore</h2>
+  <p class="hint" id="cloudst">Checking cloud...</p>
+  <button class="btn cyan" id="bdl">Download full backup</button><br><br><button class="btn gray" id="bmig">Upload old data from this device to cloud</button><br><br>
+  <button class="btn gray" id="blog">Download order logs (CSV)</button>
+  <label class="file" style="margin-top:12px">Restore from backup (.json)<input type="file" id="bup" accept=".json"></label></div>
+ <div class="card"><button class="btn red" id="bclr">Erase all data on this device</button></div>
+</div>
+</div>
+<nav><button data-t="p" class="on">Products</button><button data-t="k">Pickers</button><button data-t="b">Backup</button></nav>
 <script>
-var S=FreshTrackStore,K=S.K,$=function(i){return document.getElementById(i)};
-function say(t,bad){var m=$('msg');m.style.color=bad?'#dc2626':'#059669';m.textContent=t}
+var C=window.FreshTrackCloud,$=function(i){return document.getElementById(i)};
+var _mt;function say(t,bad){var m=$('msg');m.className=bad?'bad':'ok';m.textContent=t;clearTimeout(_mt);_mt=setTimeout(function(){m.className=''},3500)}
 function esc(x){return String(x==null?'':x).replace(/[&<>"]/g,function(c){return{'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]})}
-document.querySelectorAll('.tabs button').forEach(function(b){b.onclick=function(){
- document.querySelectorAll('.tabs button').forEach(function(x){x.classList.toggle('on',x===b)});
+function bad(e){say(e&&e.message?e.message:String(e),1)}
+document.querySelectorAll('nav button').forEach(function(b){b.onclick=function(){
+ document.querySelectorAll('nav button').forEach(function(x){x.classList.toggle('on',x===b)});
  ['p','k','b'].forEach(function(t){$('t-'+t).style.display=t===b.dataset.t?'':'none'})}});
 
-function drawProducts(){var items=S.load(K.items,[]),q=$('q').value.toLowerCase();
- var f=items.filter(function(i){return !q||(i.barcode+i.sku+i.description+i.location).toLowerCase().indexOf(q)>-1});
- $('cnt').textContent=items.length+' products'+(q?' ('+f.length+' shown)':'');
- $('tbl').innerHTML='<tr><th>Barcode</th><th>Code</th><th>Description</th><th>Loc</th><th></th></tr>'+
-  f.slice(0,300).map(function(i){return '<tr><td>'+esc(i.barcode)+'</td><td>'+esc(i.sku)+'</td><td>'+esc(i.description)+'</td><td>'+esc(i.location)+
-  '</td><td><a href="#" data-e="'+esc(i.barcode)+'">edit</a> <a href="#" data-d="'+esc(i.barcode)+'">del</a></td></tr>'}).join('')}
+var ITEMS=[];
+function drawProducts(){var q=$('q').value.toLowerCase();
+ var f=ITEMS.filter(function(i){return !q||(i.barcode+i.sku+i.description+i.location).toLowerCase().indexOf(q)>-1});
+ $('cnt').textContent=ITEMS.length+' products'+(q?' ('+f.length+' shown)':'');
+ $('tbl').innerHTML=f.slice(0,200).map(function(i){return '<div class="item"><div class="thumb">'+(i.imageUrl?'<img src="'+esc(i.imageUrl)+'" referrerpolicy="no-referrer" onerror="this.remove()">':'&#128230;')+'</div><div class="info"><b>'+esc(i.description)+'</b><small>'+esc(i.barcode)+' &middot; '+esc(i.sku)+(i.location?' &middot; Loc '+esc(i.location):'')+'</small></div><div class="acts"><a href="#" data-e="'+esc(i.barcode)+'">Edit</a><a href="#" data-d="'+esc(i.barcode)+'" class="del">Del</a></div></div>'}).join('')}
+function loadProducts(){return C.listItems().then(function(l){ITEMS=l;drawProducts()}).catch(bad)}
 $('q').oninput=drawProducts;
-$('tbl').onclick=function(e){var t=e.target,items=S.load(K.items,[]);
- if(t.dataset.e){e.preventDefault();var i=items.filter(function(x){return x.barcode===t.dataset.e})[0];
+$('tbl').onclick=function(e){var t=e.target;
+ if(t.dataset.e){e.preventDefault();var i=ITEMS.filter(function(x){return x.barcode===t.dataset.e})[0];
   $('pb').value=i.barcode;$('ps').value=i.sku;$('pd').value=i.description;$('pi').value=i.imageUrl;$('pl').value=i.location;window.scrollTo(0,0)}
- if(t.dataset.d){e.preventDefault();if(confirm('Delete this product?')){S.save(K.items,items.filter(function(x){return x.barcode!==t.dataset.d}));drawProducts()}}};
+ if(t.dataset.d){e.preventDefault();if(confirm('Delete this product?'))C.deleteItem(t.dataset.d).then(function(){say('Deleted.');loadProducts()}).catch(bad)}};
 $('padd').onclick=function(){var b=$('pb').value.trim();if(!b||!$('pd').value.trim())return say('Barcode and description are required.',1);
- var items=S.load(K.items,[]),rec={barcode:b,sku:$('ps').value.trim(),description:$('pd').value.trim(),imageUrl:$('pi').value.trim(),location:$('pl').value.trim()};
- var ix=items.findIndex(function(x){return x.barcode===b});ix>-1?items[ix]=rec:items.push(rec);S.save(K.items,items);
- ['pb','ps','pd','pi','pl'].forEach(function(x){$(x).value=''});say(ix>-1?'Product updated.':'Product added.');drawProducts()};
+ var rec={barcode:b,sku:$('ps').value.trim(),description:$('pd').value.trim(),imageUrl:$('pi').value.trim(),location:$('pl').value.trim()};
+ C.saveItem(rec).then(function(){['pb','ps','pd','pi','pl'].forEach(function(x){$(x).value=''});say('Product saved.');loadProducts()}).catch(bad)};
 
 function parseCSV(t){var r=[],row=[],c='',q=false;for(var i=0;i<t.length;i++){var ch=t[i];
  if(q){if(ch=='"'){if(t[i+1]=='"'){c+='"';i++}else q=false}else c+=ch}
  else if(ch=='"')q=true;else if(ch==','){row.push(c);c=''}
  else if(ch=='\n'||ch=='\r'){if(ch=='\r'&&t[i+1]=='\n')i++;row.push(c);r.push(row);row=[];c=''}else c+=ch}
  if(c||row.length){row.push(c);r.push(row)}return r.filter(function(x){return x.some(function(y){return y.trim()})})}
-$('csv').onchange=function(){var f=this.files[0];if(!f)return;var rd=new FileReader();rd.onload=function(){
+$('csv').onchange=function(){var f=this.files[0],inp=this;if(!f)return;var rd=new FileReader();rd.onload=function(){
  var rows=parseCSV(String(rd.result).replace(/^\uFEFF/,'')),h=rows.shift().map(function(x){return x.trim().toLowerCase()});
  function col(names,def){for(var n=0;n<names.length;n++){var i=h.indexOf(names[n]);if(i>-1)return i}return def}
- var cb=col(['barcode'],0),cs=col(['item code','sku','code'],1),cd=col(['description'],2),cu=col(['url','image url','imageurl'],5),cl=col(['location'],6);
- var items=$('rep').checked?[]:S.load(K.items,[]),seen={};items.forEach(function(x,i){seen[x.barcode]=i});var added=0,upd=0;
- rows.forEach(function(r){var b=(r[cb]||'').trim();if(!b)return;var rec={barcode:b,sku:(r[cs]||'').trim(),description:(r[cd]||'').trim(),imageUrl:(r[cu]||'').trim(),location:(r[cl]||'').trim()};
-  if(seen[b]!==undefined){items[seen[b]]=rec;upd++}else{seen[b]=items.length;items.push(rec);added++}});
- S.save(K.items,items);say('Imported: '+added+' new, '+upd+' updated.');drawProducts();$('csv').value=''};rd.readAsText(f)};
+ var cb=col(['barcode'],0),cs=col(['item code','sku','code'],1),cd=col(['description'],2),cu=col(['url','image url','imageurl','image link','link'],-1),cl=col(['location'],6);
+ if(cu<0){var w=0;rows.slice(0,50).forEach(function(r){r.forEach(function(v,ix){if(/^https?:\/\//i.test((v||'').trim()))w=ix||w})});cu=w||5}
+ var list=[];rows.forEach(function(r){var b=(r[cb]||'').trim();if(!b)return;list.push({barcode:b,sku:(r[cs]||'').trim(),description:(r[cd]||'').trim(),imageUrl:(r[cu]||'').trim(),location:(r[cl]||'').trim()})});
+ if(!list.length)return say('No products found in that file.',1);
+ say('Uploading '+list.length+' products...');
+ C.importItems(list,$('rep').checked).then(function(){var wi=list.filter(function(x){return x.imageUrl}).length;say('Imported '+list.length+' products. With image URL: '+wi+'.');inp.value='';loadProducts()}).catch(bad)};rd.readAsText(f)};
 
-function drawPickers(){var p=S.load(K.pickers,[]);
- $('ktbl').innerHTML='<tr><th>Name</th><th>PIN</th><th>Phone</th><th></th></tr>'+p.map(function(x){return '<tr><td>'+esc(x.name)+'</td><td>'+esc(x.pin)+'</td><td>'+esc(x.phone)+
- '</td><td><a href="#" data-e="'+esc(x.name)+'">edit</a> <a href="#" data-d="'+esc(x.name)+'">del</a></td></tr>'}).join('')}
-$('ktbl').onclick=function(e){var t=e.target,p=S.load(K.pickers,[]);
- if(t.dataset.e){e.preventDefault();var x=p.filter(function(y){return y.name===t.dataset.e})[0];$('kn').value=x.name;$('kp').value=x.pin;$('kh').value=x.phone||''}
- if(t.dataset.d){e.preventDefault();if(confirm('Delete this picker?')){S.save(K.pickers,p.filter(function(y){return y.name!==t.dataset.d}));drawPickers()}}};
-$('kadd').onclick=function(){var n=$('kn').value.trim().toUpperCase(),pin=$('kp').value.trim();if(!n||!pin)return say('Name and PIN are required.',1);
- var p=S.load(K.pickers,[]),rec={name:n,pin:pin,phone:$('kh').value.trim()},ix=p.findIndex(function(y){return y.name.toUpperCase()===n});
- ix>-1?p[ix]=rec:p.push(rec);S.save(K.pickers,p);['kn','kp','kh'].forEach(function(x){$(x).value=''});say('Picker saved.');drawPickers()};
+function loadPickers(){C.listPickers().then(function(p){
+ $('ktbl').innerHTML=p.map(function(x){return '<div class="item"><div class="thumb">&#128100;</div><div class="info"><b>'+esc(x.name)+'</b><small>PIN &bull;&bull;&bull;&bull;'+(x.phone?' &middot; '+esc(x.phone):'')+'</small></div><div class="acts"><a href="#" data-e="'+esc(x.name)+'" data-p="'+esc(x.phone)+'">Edit</a><a href="#" data-d="'+esc(x.name)+'" class="del">Del</a></div></div>'}).join('')}).catch(bad)}
+$('ktbl').onclick=function(e){var t=e.target;
+ if(t.dataset.e){e.preventDefault();$('kn').value=t.dataset.e;$('kp').value='';$('kh').value=t.dataset.p||'';window.scrollTo(0,0)}
+ if(t.dataset.d){e.preventDefault();if(confirm('Delete this picker?'))C.deletePicker(t.dataset.d).then(loadPickers).catch(bad)}};
+$('kadd').onclick=function(){var n=$('kn').value.trim();if(!n)return say('Name is required.',1);
+ C.savePicker(n,$('kp').value.trim(),$('kh').value.trim()).then(function(){['kn','kp','kh'].forEach(function(x){$(x).value=''});say('Picker saved.');loadPickers()}).catch(bad)};
 
 function dl(name,text,type){var a=document.createElement('a');a.href=URL.createObjectURL(new Blob([text],{type:type}));a.download=name;a.click()}
-$('bdl').onclick=function(){dl('freshtrack-backup-'+new Date().toISOString().slice(0,10)+'.json',JSON.stringify({items:S.load(K.items,[]),pickers:S.load(K.pickers,[]),logs:S.load(K.logs,[]),theme:localStorage.getItem(K.theme)}),'application/json')};
+$('bdl').onclick=function(){C.backup().then(function(d){dl('freshtrack-backup-'+new Date().toISOString().slice(0,10)+'.json',JSON.stringify(d),'application/json')}).catch(bad)};
 $('blog').onclick=function(){var q=function(v){return '"'+String(v==null?'':v).replace(/"/g,'""')+'"'};
- dl('picking-logs.csv',['Order ID,Timestamp,Picker,Status,Minutes,Items JSON,Collaborators,Started At'].concat(S.load(K.logs,[]).map(function(l){
- return [l.orderId,l.timestamp,l.picker,l.status,l.minutesTaken,l.rawItemsJson,l.collaborators,l.startedAt].map(q).join(',')})).join('\n'),'text/csv')};
-$('bup').onchange=function(){var f=this.files[0];if(!f)return;var rd=new FileReader();rd.onload=function(){try{var d=JSON.parse(rd.result);
- if(!confirm('Replace ALL data on this device with the backup?'))return;S.save(K.items,d.items||[]);S.save(K.pickers,d.pickers||[]);S.save(K.logs,d.logs||[]);
- if(d.theme)localStorage.setItem(K.theme,d.theme);say('Backup restored.');drawProducts();drawPickers()}catch(e){say('Invalid backup file.',1)}};rd.readAsText(f)};
-$('bclr').onclick=function(){if(confirm('Erase products, pickers and orders on this device?')&&confirm('Really erase everything?')){
- [K.items,K.pickers,K.logs,K.theme,'freshtrack_staged_queue'].forEach(function(k){localStorage.removeItem(k)});location.reload()}};
-drawProducts();drawPickers();
+ C.listLogs().then(function(L){dl('picking-logs.csv',['Order ID,Timestamp,Picker,Status,Minutes,Items JSON,Collaborators,Started At'].concat(L.map(function(l){
+ return [l.orderId,l.timestamp,l.picker,l.status,l.minutesTaken,l.rawItemsJson,l.collaborators,l.startedAt].map(q).join(',')})).join('\n'),'text/csv')}).catch(bad)};
+$('bup').onchange=function(){var f=this.files[0];if(!f)return;var rd=new FileReader();rd.onload=function(){var d;try{d=JSON.parse(rd.result)}catch(e){return say('Invalid backup file.',1)}
+ if(!confirm('Replace ALL cloud data (all devices) with this backup?'))return;
+ C.restore(d).then(function(){say('Backup restored.');loadProducts();loadPickers()}).catch(bad)};rd.readAsText(f)};
+$('bmig').onclick=function(){if(!confirm('Upload the old data saved on THIS device to the cloud? This replaces cloud data.'))return;
+ C.migrateLocal().then(function(r){say('Uploaded '+r.items+' products, '+r.pickers+' pickers, '+r.logs+' orders.');loadProducts();loadPickers()}).catch(bad)};
+$('bclr').onclick=function(){if(confirm('Erase ALL cloud data for ALL devices?')&&confirm('Really erase everything?'))C.clearAll().then(function(){say('All data erased.');loadProducts();loadPickers()}).catch(bad)};
+
+if(!C.configured){$('cloudst').textContent='Cloud is NOT set up. Edit config.js (see README).';$('cloudst').style.color='#fca5a5'}
+else{C.listItems().then(function(l){$('cloudst').textContent='Cloud connected. Data is shared by all devices. ('+l.length+' products)';$('cloudst').style.color='#6ee7b7'},function(e){$('cloudst').textContent='Cloud error: '+e.message;$('cloudst').style.color='#fca5a5'});
+ loadProducts();loadPickers()}
 </script></body></html>
