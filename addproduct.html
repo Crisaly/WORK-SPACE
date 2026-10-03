@@ -1,0 +1,108 @@
+<!DOCTYPE html>
+<html lang="en"><head><meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>FreshTrack - Data Manager</title>
+<script src="freshtrack-api.js"></script>
+<style>
+*{box-sizing:border-box}body{font-family:system-ui,sans-serif;background:#f3f4f6;margin:0;padding:16px;color:#1f2937}
+.wrap{max-width:900px;margin:auto}h1{font-size:20px}a.back{font-size:14px}
+.tabs{display:flex;gap:6px;margin:12px 0}.tabs button{flex:1;padding:10px;border:0;border-radius:10px;background:#e5e7eb;font-weight:700;cursor:pointer}
+.tabs button.on{background:#059669;color:#fff}
+.card{background:#fff;border-radius:14px;padding:16px;box-shadow:0 2px 12px #0001;margin-bottom:14px}
+input,button.act{padding:10px;font-size:15px;border-radius:8px;border:1px solid #ccc}
+button.act{background:#059669;color:#fff;border:0;font-weight:700;cursor:pointer}button.red{background:#dc2626}button.gray{background:#6b7280}
+.row{display:flex;gap:8px;flex-wrap:wrap;margin:8px 0}.row input{flex:1;min-width:120px}
+table{width:100%;border-collapse:collapse;font-size:13px}td,th{padding:6px;border-bottom:1px solid #eee;text-align:left}
+.scroll{max-height:380px;overflow:auto}#msg{font-weight:700;min-height:1.3em;font-size:14px}
+.hint{font-size:13px;color:#6b7280}
+</style></head><body><div class="wrap">
+<a class="back" href="index.html">&larr; Back to terminal</a>
+<h1>FreshTrack Data Manager</h1>
+<div id="msg"></div>
+<div class="tabs"><button data-t="p" class="on">Products</button><button data-t="k">Pickers &amp; PINs</button><button data-t="b">Backup</button></div>
+
+<div id="t-p">
+ <div class="card"><b>Add / edit a product</b>
+  <div class="row"><input id="pb" placeholder="Barcode"><input id="ps" placeholder="Item code"><input id="pd" placeholder="Description" style="flex:2">
+  <input id="pi" placeholder="Image URL (optional)" style="flex:2"><input id="pl" placeholder="Location" style="max-width:100px"></div>
+  <button class="act" id="padd">Save product</button>
+  <span class="hint"> Same barcode = updates the existing product.</span></div>
+ <div class="card"><b>Import from your Google Sheet</b>
+  <p class="hint">In Google Sheets: File &gt; Download &gt; CSV on the DATA tab. Columns are matched by header (Barcode, Item Code, Description, URL, LOCATION).</p>
+  <input type="file" id="csv" accept=".csv,text/csv"> <label><input type="checkbox" id="rep"> replace all existing products</label></div>
+ <div class="card"><input id="q" placeholder="Search products..." style="width:100%">
+  <p class="hint" id="cnt"></p><div class="scroll"><table id="tbl"></table></div></div>
+</div>
+
+<div id="t-k" style="display:none"><div class="card"><b>Pickers / operators</b>
+  <div class="row"><input id="kn" placeholder="Name"><input id="kp" placeholder="PIN" inputmode="numeric"><input id="kh" placeholder="Phone (for SMS alert)"></div>
+  <button class="act" id="kadd">Save picker</button> <span class="hint">Same name = updates PIN/phone.</span>
+  <table id="ktbl" style="margin-top:10px"></table></div></div>
+
+<div id="t-b" style="display:none"><div class="card"><b>Backup &amp; restore</b>
+  <p class="hint">Data is stored in this browser only. Download a backup regularly, and use it to move data to another phone or computer.</p>
+  <div class="row"><button class="act" id="bdl">Download full backup (.json)</button>
+  <button class="act gray" id="blog">Download order logs (.csv)</button></div>
+  <p>Restore: <input type="file" id="bup" accept=".json"></p>
+  <button class="act red" id="bclr">Erase all data on this device</button></div></div>
+</div>
+<script>
+var S=FreshTrackStore,K=S.K,$=function(i){return document.getElementById(i)};
+function say(t,bad){var m=$('msg');m.style.color=bad?'#dc2626':'#059669';m.textContent=t}
+function esc(x){return String(x==null?'':x).replace(/[&<>"]/g,function(c){return{'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]})}
+document.querySelectorAll('.tabs button').forEach(function(b){b.onclick=function(){
+ document.querySelectorAll('.tabs button').forEach(function(x){x.classList.toggle('on',x===b)});
+ ['p','k','b'].forEach(function(t){$('t-'+t).style.display=t===b.dataset.t?'':'none'})}});
+
+function drawProducts(){var items=S.load(K.items,[]),q=$('q').value.toLowerCase();
+ var f=items.filter(function(i){return !q||(i.barcode+i.sku+i.description+i.location).toLowerCase().indexOf(q)>-1});
+ $('cnt').textContent=items.length+' products'+(q?' ('+f.length+' shown)':'');
+ $('tbl').innerHTML='<tr><th>Barcode</th><th>Code</th><th>Description</th><th>Loc</th><th></th></tr>'+
+  f.slice(0,300).map(function(i){return '<tr><td>'+esc(i.barcode)+'</td><td>'+esc(i.sku)+'</td><td>'+esc(i.description)+'</td><td>'+esc(i.location)+
+  '</td><td><a href="#" data-e="'+esc(i.barcode)+'">edit</a> <a href="#" data-d="'+esc(i.barcode)+'">del</a></td></tr>'}).join('')}
+$('q').oninput=drawProducts;
+$('tbl').onclick=function(e){var t=e.target,items=S.load(K.items,[]);
+ if(t.dataset.e){e.preventDefault();var i=items.filter(function(x){return x.barcode===t.dataset.e})[0];
+  $('pb').value=i.barcode;$('ps').value=i.sku;$('pd').value=i.description;$('pi').value=i.imageUrl;$('pl').value=i.location;window.scrollTo(0,0)}
+ if(t.dataset.d){e.preventDefault();if(confirm('Delete this product?')){S.save(K.items,items.filter(function(x){return x.barcode!==t.dataset.d}));drawProducts()}}};
+$('padd').onclick=function(){var b=$('pb').value.trim();if(!b||!$('pd').value.trim())return say('Barcode and description are required.',1);
+ var items=S.load(K.items,[]),rec={barcode:b,sku:$('ps').value.trim(),description:$('pd').value.trim(),imageUrl:$('pi').value.trim(),location:$('pl').value.trim()};
+ var ix=items.findIndex(function(x){return x.barcode===b});ix>-1?items[ix]=rec:items.push(rec);S.save(K.items,items);
+ ['pb','ps','pd','pi','pl'].forEach(function(x){$(x).value=''});say(ix>-1?'Product updated.':'Product added.');drawProducts()};
+
+function parseCSV(t){var r=[],row=[],c='',q=false;for(var i=0;i<t.length;i++){var ch=t[i];
+ if(q){if(ch=='"'){if(t[i+1]=='"'){c+='"';i++}else q=false}else c+=ch}
+ else if(ch=='"')q=true;else if(ch==','){row.push(c);c=''}
+ else if(ch=='\n'||ch=='\r'){if(ch=='\r'&&t[i+1]=='\n')i++;row.push(c);r.push(row);row=[];c=''}else c+=ch}
+ if(c||row.length){row.push(c);r.push(row)}return r.filter(function(x){return x.some(function(y){return y.trim()})})}
+$('csv').onchange=function(){var f=this.files[0];if(!f)return;var rd=new FileReader();rd.onload=function(){
+ var rows=parseCSV(String(rd.result).replace(/^\uFEFF/,'')),h=rows.shift().map(function(x){return x.trim().toLowerCase()});
+ function col(names,def){for(var n=0;n<names.length;n++){var i=h.indexOf(names[n]);if(i>-1)return i}return def}
+ var cb=col(['barcode'],0),cs=col(['item code','sku','code'],1),cd=col(['description'],2),cu=col(['url','image url','imageurl'],5),cl=col(['location'],6);
+ var items=$('rep').checked?[]:S.load(K.items,[]),seen={};items.forEach(function(x,i){seen[x.barcode]=i});var added=0,upd=0;
+ rows.forEach(function(r){var b=(r[cb]||'').trim();if(!b)return;var rec={barcode:b,sku:(r[cs]||'').trim(),description:(r[cd]||'').trim(),imageUrl:(r[cu]||'').trim(),location:(r[cl]||'').trim()};
+  if(seen[b]!==undefined){items[seen[b]]=rec;upd++}else{seen[b]=items.length;items.push(rec);added++}});
+ S.save(K.items,items);say('Imported: '+added+' new, '+upd+' updated.');drawProducts();$('csv').value=''};rd.readAsText(f)};
+
+function drawPickers(){var p=S.load(K.pickers,[]);
+ $('ktbl').innerHTML='<tr><th>Name</th><th>PIN</th><th>Phone</th><th></th></tr>'+p.map(function(x){return '<tr><td>'+esc(x.name)+'</td><td>'+esc(x.pin)+'</td><td>'+esc(x.phone)+
+ '</td><td><a href="#" data-e="'+esc(x.name)+'">edit</a> <a href="#" data-d="'+esc(x.name)+'">del</a></td></tr>'}).join('')}
+$('ktbl').onclick=function(e){var t=e.target,p=S.load(K.pickers,[]);
+ if(t.dataset.e){e.preventDefault();var x=p.filter(function(y){return y.name===t.dataset.e})[0];$('kn').value=x.name;$('kp').value=x.pin;$('kh').value=x.phone||''}
+ if(t.dataset.d){e.preventDefault();if(confirm('Delete this picker?')){S.save(K.pickers,p.filter(function(y){return y.name!==t.dataset.d}));drawPickers()}}};
+$('kadd').onclick=function(){var n=$('kn').value.trim().toUpperCase(),pin=$('kp').value.trim();if(!n||!pin)return say('Name and PIN are required.',1);
+ var p=S.load(K.pickers,[]),rec={name:n,pin:pin,phone:$('kh').value.trim()},ix=p.findIndex(function(y){return y.name.toUpperCase()===n});
+ ix>-1?p[ix]=rec:p.push(rec);S.save(K.pickers,p);['kn','kp','kh'].forEach(function(x){$(x).value=''});say('Picker saved.');drawPickers()};
+
+function dl(name,text,type){var a=document.createElement('a');a.href=URL.createObjectURL(new Blob([text],{type:type}));a.download=name;a.click()}
+$('bdl').onclick=function(){dl('freshtrack-backup-'+new Date().toISOString().slice(0,10)+'.json',JSON.stringify({items:S.load(K.items,[]),pickers:S.load(K.pickers,[]),logs:S.load(K.logs,[]),theme:localStorage.getItem(K.theme)}),'application/json')};
+$('blog').onclick=function(){var q=function(v){return '"'+String(v==null?'':v).replace(/"/g,'""')+'"'};
+ dl('picking-logs.csv',['Order ID,Timestamp,Picker,Status,Minutes,Items JSON,Collaborators,Started At'].concat(S.load(K.logs,[]).map(function(l){
+ return [l.orderId,l.timestamp,l.picker,l.status,l.minutesTaken,l.rawItemsJson,l.collaborators,l.startedAt].map(q).join(',')})).join('\n'),'text/csv')};
+$('bup').onchange=function(){var f=this.files[0];if(!f)return;var rd=new FileReader();rd.onload=function(){try{var d=JSON.parse(rd.result);
+ if(!confirm('Replace ALL data on this device with the backup?'))return;S.save(K.items,d.items||[]);S.save(K.pickers,d.pickers||[]);S.save(K.logs,d.logs||[]);
+ if(d.theme)localStorage.setItem(K.theme,d.theme);say('Backup restored.');drawProducts();drawPickers()}catch(e){say('Invalid backup file.',1)}};rd.readAsText(f)};
+$('bclr').onclick=function(){if(confirm('Erase products, pickers and orders on this device?')&&confirm('Really erase everything?')){
+ [K.items,K.pickers,K.logs,K.theme,'freshtrack_staged_queue'].forEach(function(k){localStorage.removeItem(k)});location.reload()}};
+drawProducts();drawPickers();
+</script></body></html>

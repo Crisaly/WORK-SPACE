@@ -1,0 +1,3458 @@
+<!DOCTYPE html>
+<html data-theme="light">
+<head>
+<script src="freshtrack-api.js"></script>
+
+<base target="_top">
+<script>
+// This dashboard always uses the light theme.
+document.documentElement.setAttribute('data-theme', 'light');
+</script>
+<meta charset="UTF-8">
+<meta name="viewport"
+content="width=device-width, initial-scale=1.0">
+<title>FreshTrack Dashboard</title>
+<style>
+:root {
+--bg: #080d1d;
+--bg-2: #0e1530;
+--panel: rgba(20, 29, 59, 0.94);
+--panel-2: rgba(25, 37, 75, 0.92);
+--border: rgba(151, 166, 220, 0.16);
+--text: #f5f7ff;
+--muted: #9da9c9;
+--purple: #bb55ee;
+--purple-2: #7c42e7;
+--cyan: #19d8df;
+--blue: #468ff0;
+--green: #43dd9b;
+--orange: #ffb454;
+--red: #ff6488;
+--shadow: 0 25px 80px rgba(0, 0, 0, 0.45);
+--radius: 20px;
+--pie-gap: #141d3b;
+--chart-grid: rgba(162, 177, 230, 0.14);
+--chart-axis: #7885a9;
+--chart-label: #8793b6;
+--chart-line: #22d9df;
+--chart-fill-1: rgba(24, 216, 223, 0.38);
+--chart-fill-2: rgba(24, 216, 223, 0.01);
+--chart-halo: rgba(34, 217, 223, 0.25);
+}
+* {
+box-sizing: border-box;
+}
+html,
+body {
+margin: 0;
+min-height: 100%;
+background:
+radial-gradient(
+circle at 10% 0%,
+rgba(143, 64, 198, 0.26),
+transparent 34%
+),
+radial-gradient(
+circle at 95% 20%,
+rgba(0, 212, 224, 0.12),
+transparent 28%
+),
+linear-gradient(135deg, #202640 0%, var(--bg) 52%, #0a1126 100%);
+color: var(--text);
+font-family:
+Inter, ui-sans-serif, system-ui, -apple-system,
+BlinkMacSystemFont, "Segoe UI", sans-serif;
+}
+body {
+padding: 22px;
+}
+button,
+select {
+font: inherit;
+}
+button {
+cursor: pointer;
+}
+.app {
+min-height: calc(100vh - 44px);
+display: flex;
+overflow: hidden;
+border: 1px solid rgba(255, 255, 255, 0.08);
+border-radius: 28px;
+background: rgba(8, 13, 29, 0.8);
+box-shadow: var(--shadow);
+}
+.sidebar {
+width: 250px;
+flex: 0 0 250px;
+padding: 28px 18px;
+background:
+linear-gradient(
+180deg,
+rgba(22, 28, 55, 0.98),
+rgba(11, 17, 36, 0.98)
+);
+border-right: 1px solid var(--border);
+overflow-y: auto;
+}
+.brand {
+display: flex;
+gap: 12px;
+align-items: center;
+padding: 2px 10px 32px;
+}
+.brand-mark {
+display: grid;
+width: 42px;
+height: 42px;
+place-items: center;
+color: white;
+font-weight: 900;
+border-radius: 14px;
+background:
+linear-gradient(135deg, var(--purple), var(--blue));
+box-shadow: 0 10px 28px rgba(180, 75, 232, 0.35);
+}
+.brand-title {
+margin: 0;
+font-size: 18px;
+letter-spacing: -0.5px;
+}
+.brand-subtitle {
+margin: 4px 0 0;
+color: var(--muted);
+font-size: 11px;
+}
+.nav-label {
+margin: 18px 12px 9px;
+color: #687397;
+font-size: 10px;
+font-weight: 800;
+letter-spacing: 1.4px;
+text-transform: uppercase;
+}
+.nav-item {
+width: 100%;
+display: flex;
+align-items: center;
+gap: 12px;
+padding: 12px 14px;
+margin: 4px 0;
+color: var(--muted);
+border: 0;
+border-radius: 12px;
+background: transparent;
+text-align: left;
+transition: 0.2s ease;
+}
+.nav-item:hover,
+.nav-item.active {
+color: white;
+background:
+linear-gradient(
+90deg,
+rgba(183, 73, 226, 0.36),
+rgba(83, 76, 213, 0.18)
+);
+}
+.nav-icon {
+width: 22px;
+color: var(--purple);
+font-size: 17px;
+text-align: center;
+}
+.sidebar-bottom {
+margin-top: 34px;
+padding: 14px;
+border: 1px solid var(--border);
+border-radius: 15px;
+background: rgba(255, 255, 255, 0.035);
+}
+.status-dot {
+display: inline-block;
+width: 8px;
+height: 8px;
+margin-right: 7px;
+border-radius: 50%;
+background: var(--green);
+box-shadow: 0 0 12px var(--green);
+}
+.sidebar-bottom p {
+margin: 0;
+color: var(--muted);
+font-size: 12px;
+}
+.sidebar-bottom strong {
+display: block;
+margin-top: 7px;
+font-size: 14px;
+}
+.main {
+min-width: 0;
+flex: 1;
+padding: 28px;
+overflow: auto;
+}
+.topbar {
+display: flex;
+align-items: center;
+flex-wrap: wrap;
+justify-content: space-between;
+gap: 18px;
+margin-bottom: 24px;
+}
+.eyebrow {
+margin: 0 0 6px;
+color: var(--cyan);
+font-size: 11px;
+font-weight: 800;
+letter-spacing: 1.6px;
+text-transform: uppercase;
+}
+h1 {
+margin: 0;
+font-size: clamp(25px, 3vw, 38px);
+letter-spacing: -1.4px;
+}
+.topbar-right {
+display: flex;
+flex-wrap: wrap;
+align-items: center;
+justify-content: flex-end;
+margin-left: auto;
+gap: 10px;
+}
+.date-box {
+min-width: 170px;
+padding: 11px 14px;
+color: var(--muted);
+border: 1px solid var(--border);
+border-radius: 12px;
+background: rgba(255, 255, 255, 0.04);
+font-size: 12px;
+text-align: center;
+}
+.action-btn {
+display: inline-flex;
+align-items: center;
+justify-content: center;
+white-space: nowrap;
+gap: 8px;
+min-height: 42px;
+padding: 0 15px;
+color: white;
+border: 1px solid rgba(191, 94, 241, 0.45);
+border-radius: 12px;
+background:
+linear-gradient(135deg, #bd52ea, #7651e8);
+box-shadow: 0 10px 25px rgba(133, 70, 220, 0.25);
+transition: 0.2s ease;
+}
+.action-btn:hover {
+transform: translateY(-1px);
+filter: brightness(1.08);
+}
+.action-btn.secondary {
+border-color: var(--border);
+background: rgba(255, 255, 255, 0.05);
+box-shadow: none;
+}
+.kpi-grid {
+display: grid;
+grid-template-columns: repeat(4, minmax(0, 1fr));
+gap: 16px;
+margin-bottom: 18px;
+}
+.kpi {
+position: relative;
+min-height: 142px;
+padding: 20px;
+overflow: hidden;
+border: 1px solid var(--border);
+border-radius: var(--radius);
+background: var(--panel);
+}
+.kpi::after {
+position: absolute;
+right: -35px;
+bottom: -55px;
+width: 150px;
+height: 150px;
+border-radius: 50%;
+background: var(--kpi-color, var(--purple));
+content: "";
+opacity: 0.12;
+filter: blur(2px);
+}
+.kpi-head {
+display: flex;
+align-items: center;
+justify-content: space-between;
+color: var(--muted);
+font-size: 12px;
+}
+.kpi-icon {
+display: grid;
+width: 34px;
+height: 34px;
+place-items: center;
+color: white;
+border-radius: 11px;
+background: var(--kpi-color, var(--purple));
+box-shadow: 0 7px 19px color-mix(
+in srgb,
+var(--kpi-color, var(--purple)) 35%,
+transparent
+);
+}
+.kpi-value {
+margin-top: 19px;
+font-size: 31px;
+font-weight: 800;
+letter-spacing: -1px;
+}
+.kpi-note {
+margin-top: 5px;
+color: var(--muted);
+font-size: 11px;
+}
+.content-grid {
+display: grid;
+grid-template-columns: minmax(0, 1.35fr) minmax(300px, 0.65fr);
+gap: 18px;
+margin-bottom: 18px;
+}
+.panel {
+min-width: 0;
+padding: 20px;
+border: 1px solid var(--border);
+border-radius: var(--radius);
+background: var(--panel);
+}
+.panel-header {
+display: flex;
+align-items: center;
+justify-content: space-between;
+gap: 12px;
+margin-bottom: 18px;
+}
+.panel-title {
+margin: 0;
+font-size: 15px;
+letter-spacing: -0.2px;
+}
+.panel-subtitle {
+margin: 5px 0 0;
+color: var(--muted);
+font-size: 11px;
+}
+.legend {
+display: flex;
+align-items: center;
+gap: 14px;
+color: var(--muted);
+font-size: 11px;
+}
+.legend span {
+display: inline-flex;
+align-items: center;
+gap: 5px;
+}
+.legend i {
+display: inline-block;
+width: 9px;
+height: 9px;
+border-radius: 50%;
+background: var(--cyan);
+}
+.legend i.purple {
+background: var(--purple);
+}
+.chart-wrap {
+position: relative;
+height: 265px;
+}
+canvas {
+width: 100%;
+height: 100%;
+}
+.status-list {
+display: grid;
+gap: 16px;
+margin-top: 25px;
+}
+.status-row {
+display: grid;
+grid-template-columns: 95px 1fr 45px;
+align-items: center;
+gap: 10px;
+color: var(--muted);
+font-size: 12px;
+}
+.status-row strong {
+color: white;
+font-size: 12px;
+text-align: right;
+}
+.progress {
+height: 8px;
+overflow: hidden;
+border-radius: 20px;
+background: rgba(255, 255, 255, 0.08);
+}
+.progress > span {
+display: block;
+height: 100%;
+border-radius: inherit;
+background:
+linear-gradient(90deg, var(--purple), var(--cyan));
+}
+.bottom-grid {
+display: grid;
+grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+gap: 18px;
+margin-bottom: 18px;
+}
+.table-wrap {
+overflow: auto;
+}
+table {
+width: 100%;
+border-collapse: collapse;
+font-size: 12px;
+}
+th {
+padding: 0 10px 11px;
+color: #7380a5;
+font-size: 10px;
+font-weight: 800;
+letter-spacing: 0.7px;
+text-align: left;
+text-transform: uppercase;
+}
+td {
+padding: 13px 10px;
+color: var(--muted);
+border-top: 1px solid rgba(255, 255, 255, 0.06);
+white-space: nowrap;
+}
+td:first-child {
+color: white;
+font-weight: 700;
+}
+.badge {
+display: inline-flex;
+align-items: center;
+min-height: 23px;
+padding: 0 8px;
+color: white;
+border-radius: 8px;
+background: rgba(255, 255, 255, 0.1);
+font-size: 10px;
+font-weight: 800;
+}
+.badge.green {
+color: #89f4c4;
+background: rgba(67, 221, 155, 0.12);
+}
+.badge.orange {
+color: #ffd18a;
+background: rgba(255, 180, 84, 0.12);
+}
+.badge.red {
+color: #ff9ab3;
+background: rgba(255, 100, 136, 0.12);
+}
+.stock-list {
+display: grid;
+gap: 11px;
+}
+.stock-item {
+display: flex;
+align-items: center;
+justify-content: space-between;
+gap: 12px;
+padding: 12px;
+border: 1px solid rgba(255, 255, 255, 0.06);
+border-radius: 12px;
+background: rgba(255, 255, 255, 0.035);
+}
+.stock-item-main {
+min-width: 0;
+}
+.stock-item-name {
+overflow: hidden;
+color: white;
+font-size: 12px;
+font-weight: 700;
+text-overflow: ellipsis;
+white-space: nowrap;
+}
+.stock-item-code {
+margin-top: 4px;
+color: var(--muted);
+font-size: 10px;
+}
+.stock-number {
+color: var(--red);
+font-size: 17px;
+font-weight: 800;
+}
+.logs-panel {
+margin-bottom: 18px;
+}
+.log-table td {
+padding-top: 11px;
+padding-bottom: 11px;
+}
+.empty-state {
+padding: 30px 15px;
+color: var(--muted);
+text-align: center;
+font-size: 12px;
+}
+.loading {
+position: fixed;
+z-index: 10;
+inset: 0;
+display: grid;
+place-items: center;
+background: rgba(5, 8, 19, 0.8);
+backdrop-filter: blur(8px);
+}
+.loading-card {
+display: flex;
+align-items: center;
+gap: 13px;
+padding: 18px 22px;
+border: 1px solid var(--border);
+border-radius: 15px;
+background: var(--panel-2);
+box-shadow: var(--shadow);
+font-size: 13px;
+}
+.spinner {
+width: 19px;
+height: 19px;
+border: 3px solid rgba(255, 255, 255, 0.2);
+border-top-color: var(--cyan);
+border-radius: 50%;
+animation: spin 0.8s linear infinite;
+}
+@keyframes spin {
+to {
+transform: rotate(360deg);
+}
+}
+.toast {
+position: fixed;
+right: 24px;
+bottom: 24px;
+z-index: 20;
+max-width: 340px;
+padding: 13px 16px;
+color: white;
+border: 1px solid var(--border);
+border-radius: 12px;
+background: #1d284b;
+box-shadow: var(--shadow);
+font-size: 12px;
+opacity: 0;
+pointer-events: none;
+transform: translateY(10px);
+transition: 0.25s ease;
+}
+.toast.show {
+opacity: 1;
+transform: translateY(0);
+}
+/* ===== Picker Performance This Month ===== */
+.pm-section {
+margin-bottom: 18px;
+}
+.pm-title-row {
+display: flex;
+align-items: center;
+gap: 9px;
+}
+.pm-crown {
+color: var(--orange);
+font-size: 18px;
+line-height: 1;
+}
+.pm-print-btn {
+display: inline-flex;
+align-items: center;
+gap: 7px;
+min-height: 34px;
+padding: 0 13px;
+color: var(--muted);
+border: 1px solid var(--border);
+border-radius: 10px;
+background: rgba(255, 255, 255, 0.04);
+font-size: 12px;
+font-weight: 700;
+transition: 0.2s ease;
+}
+.pm-print-btn:hover {
+color: var(--text);
+background: rgba(255, 255, 255, 0.09);
+}
+.pm-controls {
+display: flex;
+flex-wrap: wrap;
+align-items: flex-end;
+gap: 14px 16px;
+padding-top: 16px;
+border-top: 1px solid var(--border);
+}
+.pm-field {
+position: relative;
+display: flex;
+flex-direction: column;
+gap: 6px;
+min-width: 0;
+}
+.pm-label {
+color: #7380a5;
+font-size: 10px;
+font-weight: 800;
+letter-spacing: 0.7px;
+text-transform: uppercase;
+}
+.pm-input,
+.pm-picker-btn {
+min-height: 40px;
+padding: 0 12px;
+color: var(--text);
+border: 1px solid var(--border);
+border-radius: 12px;
+background: rgba(255, 255, 255, 0.05);
+color-scheme: dark;
+font-size: 13px;
+font-weight: 700;
+outline: none;
+}
+.pm-input:focus,
+.pm-picker-btn:focus-visible {
+border-color: rgba(187, 85, 238, 0.75);
+box-shadow: 0 0 0 3px rgba(187, 85, 238, 0.18);
+}
+.pm-picker-btn {
+display: flex;
+align-items: center;
+justify-content: space-between;
+gap: 12px;
+min-width: 210px;
+text-align: left;
+}
+.pm-caret {
+color: var(--muted);
+font-size: 11px;
+}
+.pm-menu {
+position: absolute;
+z-index: 30;
+top: calc(100% + 6px);
+left: 0;
+display: none;
+min-width: 100%;
+max-height: 250px;
+overflow-y: auto;
+padding: 8px;
+border: 1px solid var(--border);
+border-radius: 14px;
+background: #141d3b;
+box-shadow: var(--shadow);
+}
+.pm-menu.open {
+display: block;
+}
+.pm-menu label {
+display: flex;
+align-items: center;
+gap: 10px;
+padding: 8px 9px;
+color: var(--text);
+border-radius: 9px;
+font-size: 13px;
+cursor: pointer;
+white-space: nowrap;
+}
+.pm-menu label:hover {
+background: rgba(255, 255, 255, 0.06);
+}
+.pm-menu input {
+accent-color: var(--purple);
+}
+.pm-menu-all {
+margin-bottom: 4px;
+padding-bottom: 10px !important;
+border-bottom: 1px solid var(--border);
+border-radius: 9px 9px 0 0 !important;
+font-weight: 800;
+}
+.pm-segment {
+display: inline-flex;
+gap: 3px;
+padding: 3px;
+border: 1px solid var(--border);
+border-radius: 12px;
+background: rgba(255, 255, 255, 0.04);
+}
+.pm-segment button {
+min-height: 32px;
+padding: 0 14px;
+color: var(--muted);
+border: 0;
+border-radius: 9px;
+background: transparent;
+font-size: 12px;
+font-weight: 800;
+transition: 0.2s ease;
+}
+.pm-segment button.active {
+color: white;
+background: linear-gradient(135deg, var(--purple), var(--purple-2));
+}
+.pm-links {
+display: flex;
+justify-content: space-between;
+gap: 12px;
+padding: 12px 0 14px;
+}
+.pm-link {
+padding: 0;
+color: var(--cyan);
+border: 0;
+background: none;
+font-size: 12px;
+font-weight: 700;
+}
+.pm-link.muted {
+color: var(--muted);
+}
+.pm-link:hover {
+text-decoration: underline;
+}
+.pm-body {
+display: grid;
+grid-template-columns: minmax(220px, 300px) minmax(0, 1fr);
+gap: 28px;
+align-items: center;
+padding-top: 16px;
+border-top: 1px solid var(--border);
+}
+.pm-body > .empty-state {
+grid-column: 1 / -1;
+}
+.pm-pie {
+display: grid;
+place-items: center;
+}
+.pm-pie svg {
+width: 100%;
+max-width: 270px;
+height: auto;
+}
+.pm-row {
+display: flex;
+align-items: center;
+justify-content: space-between;
+gap: 12px;
+padding: 12px 4px;
+border-top: 1px solid rgba(255, 255, 255, 0.06);
+font-size: 13px;
+}
+.pm-row:first-child {
+border-top: 0;
+}
+.pm-row-name {
+display: flex;
+align-items: center;
+gap: 10px;
+min-width: 0;
+color: white;
+font-weight: 800;
+letter-spacing: 0.3px;
+text-transform: uppercase;
+}
+.pm-row-name .pm-crown {
+font-size: 14px;
+}
+.pm-dot {
+flex: 0 0 auto;
+width: 10px;
+height: 10px;
+border-radius: 50%;
+}
+.pm-row-value {
+flex: 0 0 auto;
+color: var(--muted);
+font-weight: 700;
+white-space: nowrap;
+}
+/* ===== Card tools: hide / make bigger (all dashboard cards) ===== */
+.card-actions {
+display: flex;
+flex: 0 0 auto;
+align-items: center;
+gap: 8px;
+}
+.card-icon-btn {
+display: inline-grid;
+place-items: center;
+width: 34px;
+height: 34px;
+padding: 0;
+color: var(--muted);
+border: 1px solid var(--border);
+border-radius: 10px;
+background: rgba(255, 255, 255, 0.04);
+font-size: 15px;
+line-height: 1;
+transition: 0.2s ease;
+}
+.card-icon-btn:hover {
+color: var(--text);
+background: rgba(255, 255, 255, 0.09);
+}
+.card-icon-btn span {
+display: block;
+transition: transform 0.2s ease;
+}
+.panel.card-collapsed > :not(.panel-header) {
+display: none !important;
+}
+.panel.card-collapsed > .panel-header {
+margin-bottom: 0;
+}
+.panel.card-collapsed .card-collapse-icon {
+transform: rotate(-90deg);
+}
+.card-backdrop {
+display: none;
+position: fixed;
+inset: 0;
+z-index: 800;
+background: rgba(4, 8, 20, 0.72);
+backdrop-filter: blur(3px);
+}
+.card-backdrop.show {
+display: block;
+}
+.panel.card-large {
+position: fixed;
+z-index: 900;
+inset: 24px 24px auto 292px;
+max-height: calc(100vh - 48px);
+max-width: 1400px;
+margin: 0 auto;
+padding: 28px;
+overflow: auto;
+background: #101832;
+box-shadow: var(--shadow);
+}
+.panel.card-large .card-collapse-btn {
+display: none;
+}
+.panel.card-large .panel-title {
+font-size: 20px;
+}
+.panel.card-large .panel-subtitle {
+font-size: 13px;
+}
+.panel.card-large .chart-wrap {
+height: min(460px, 55vh);
+}
+.panel.card-large table {
+font-size: 14px;
+}
+.panel.card-large td {
+padding-top: 16px;
+padding-bottom: 16px;
+}
+.panel.card-large .pm-input,
+.panel.card-large .pm-picker-btn {
+min-height: 46px;
+font-size: 14px;
+}
+.panel.card-large .pm-body {
+grid-template-columns: minmax(300px, 480px) minmax(0, 1fr);
+gap: 44px;
+}
+.panel.card-large .pm-pie svg {
+max-width: 460px;
+}
+.panel.card-large .pm-row {
+padding: 18px 6px;
+font-size: 16px;
+}
+/* ===== Date range bar on every card ===== */
+.card-range {
+display: flex;
+flex-wrap: wrap;
+align-items: flex-end;
+gap: 12px 14px;
+margin-bottom: 16px;
+padding-bottom: 14px;
+border-bottom: 1px solid var(--border);
+}
+.card-range .pm-input {
+min-height: 36px;
+padding: 0 10px;
+font-size: 12px;
+}
+.card-range .pm-picker-btn {
+min-height: 36px;
+min-width: 170px;
+padding: 0 10px;
+font-size: 12px;
+}
+/* Fixed so the list is never clipped by a small card. */
+.card-range .pm-menu {
+position: fixed;
+z-index: 1000;
+top: 0;
+left: 0;
+min-width: 0;
+}
+.panel.card-large .card-range .pm-picker-btn {
+min-height: 42px;
+font-size: 13px;
+}
+.card-range-presets {
+display: flex;
+align-items: center;
+gap: 14px;
+min-height: 36px;
+}
+.card-range-note {
+margin-left: auto;
+align-self: center;
+color: var(--muted);
+font-size: 11px;
+font-weight: 700;
+}
+.card-range-note.error {
+color: var(--red);
+}
+.panel.card-large .card-range .pm-input {
+min-height: 42px;
+font-size: 13px;
+}
+/* ===== Out-of-stock reports ===== */
+.stock-reports {
+margin-top: 18px;
+padding-top: 16px;
+border-top: 1px solid var(--border);
+}
+.stock-reports-title {
+margin: 0 0 12px;
+color: #7380a5;
+font-size: 10px;
+font-weight: 800;
+letter-spacing: 0.7px;
+text-transform: uppercase;
+}
+.stock-reports .stock-item + .stock-item {
+margin-top: 8px;
+}
+/* Keep the sidebar usable while a card is open */
+body.card-open .sidebar {
+position: relative;
+z-index: 850;
+}
+@media (max-width: 900px) {
+.pm-body {
+grid-template-columns: 1fr;
+gap: 12px;
+}
+}
+@media (max-width: 760px) {
+.pm-field,
+.pm-picker-btn {
+width: 100%;
+}
+.pm-field .pm-input {
+width: 100%;
+}
+.pm-segment {
+width: 100%;
+}
+.pm-segment button {
+flex: 1;
+}
+.panel.card-large {
+inset: 10px 10px auto;
+max-height: calc(100vh - 20px);
+padding: 16px;
+}
+.panel.card-large .pm-body {
+grid-template-columns: 1fr;
+gap: 14px;
+}
+}
+@media print {
+body.pm-printing .sidebar,
+body.pm-printing .topbar,
+body.pm-printing .main > section:not(#picker-month-section),
+body.pm-printing .loading,
+body.pm-printing .toast,
+body.pm-printing .pm-controls,
+body.pm-printing .pm-links {
+display: none !important;
+}
+body.pm-printing .panel.card-large {
+position: static;
+max-width: none;
+overflow: visible;
+}
+.card-actions,
+.card-backdrop,
+.card-placeholder {
+display: none !important;
+}
+body.pm-printing #picker-month-panel,
+body.pm-printing .pm-row-name,
+body.pm-printing .pm-row-value,
+body.pm-printing #picker-month-panel .panel-subtitle {
+color: #111;
+}
+body.pm-printing .pm-body,
+body.pm-printing .pm-row {
+border-color: #ddd;
+}
+}
+.build-tag {
+padding: 6px 10px;
+color: var(--muted);
+border: 1px dashed var(--border);
+border-radius: 999px;
+font-size: 10px;
+font-weight: 800;
+letter-spacing: 0.6px;
+text-transform: uppercase;
+}
+/* ===== Light theme ===== */
+html:root {
+color-scheme: light;
+--bg: #eef1f8;
+--bg-2: #f6f8fc;
+--panel: rgba(255, 255, 255, 0.97);
+--panel-2: #f5f7fc;
+--border: rgba(30, 41, 90, 0.12);
+--text: #1a2140;
+--muted: #5b6588;
+--purple: #a63fd8;
+--purple-2: #6d3fdc;
+--cyan: #0e93a0;
+--blue: #2f6fdc;
+--green: #0f9d63;
+--orange: #d9820b;
+--red: #dc3358;
+--shadow: 0 18px 50px rgba(40, 50, 100, 0.16);
+--pie-gap: #ffffff;
+--chart-grid: rgba(30, 41, 90, 0.12);
+--chart-axis: #6a7599;
+--chart-label: #5b6588;
+--chart-line: #0e93a0;
+--chart-fill-1: rgba(14, 147, 160, 0.30);
+--chart-fill-2: rgba(14, 147, 160, 0.02);
+--chart-halo: rgba(14, 147, 160, 0.25);
+}
+html,
+html body {
+background:
+radial-gradient(
+circle at 10% 0%,
+rgba(166, 63, 216, 0.14),
+transparent 34%
+),
+radial-gradient(
+circle at 95% 20%,
+rgba(14, 147, 160, 0.10),
+transparent 28%
+),
+linear-gradient(135deg, #f4f6fc 0%, #e9edf7 100%);
+}
+html .app {
+border-color: rgba(30, 41, 90, 0.10);
+background: rgba(255, 255, 255, 0.55);
+}
+html .sidebar {
+background: linear-gradient(180deg, #ffffff, #f2f4fb);
+}
+html .nav-label {
+color: #8a93b2;
+}
+html .nav-item:hover,
+html .nav-item.active {
+color: var(--text);
+background:
+linear-gradient(
+90deg,
+rgba(166, 63, 216, 0.18),
+rgba(83, 76, 213, 0.08)
+);
+}
+html .sidebar-bottom,
+html .date-box,
+html .stock-item,
+html .pm-print-btn,
+html .card-icon-btn,
+html .pm-segment,
+html .action-btn.secondary {
+background: rgba(30, 41, 90, 0.04);
+}
+html .action-btn.secondary {
+color: var(--text);
+}
+html .pm-print-btn:hover,
+html .card-icon-btn:hover {
+background: rgba(30, 41, 90, 0.10);
+}
+html .progress {
+background: rgba(30, 41, 90, 0.10);
+}
+html th,
+html .pm-label,
+html .stock-reports-title {
+color: #6a7599;
+}
+html td,
+html .stock-item,
+html .pm-row {
+border-color: rgba(30, 41, 90, 0.08);
+}
+html td:first-child,
+html .status-row strong,
+html .stock-item-name,
+html .pm-row-name {
+color: var(--text);
+}
+html .badge {
+color: var(--text);
+background: rgba(30, 41, 90, 0.08);
+}
+html .badge.green {
+color: #0b7a4d;
+background: rgba(16, 185, 129, 0.15);
+}
+html .badge.orange {
+color: #93560a;
+background: rgba(245, 158, 11, 0.18);
+}
+html .badge.red {
+color: #b4234a;
+background: rgba(244, 63, 94, 0.13);
+}
+html .pm-input,
+html .pm-picker-btn {
+color: var(--text);
+color-scheme: light;
+background: rgba(30, 41, 90, 0.04);
+}
+html .pm-menu {
+background: #ffffff;
+box-shadow: 0 16px 40px rgba(40, 50, 100, 0.20);
+}
+html .pm-menu label:hover {
+background: rgba(30, 41, 90, 0.06);
+}
+html .panel.card-large {
+background: #ffffff;
+}
+html .card-backdrop {
+background: rgba(30, 40, 80, 0.35);
+}
+html .loading {
+background: rgba(244, 246, 252, 0.85);
+}
+html .spinner {
+border-color: rgba(30, 41, 90, 0.15);
+border-top-color: var(--cyan);
+}
+html .pm-segment button.active {
+color: #ffffff;
+}
+@media (max-width: 1180px) {
+.kpi-grid {
+grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+.content-grid,
+.bottom-grid {
+grid-template-columns: 1fr;
+}
+}
+@media (max-width: 760px) {
+body {
+padding: 0;
+}
+.app {
+min-height: 100vh;
+border-radius: 0;
+}
+.sidebar {
+display: none;
+}
+.main {
+padding: 18px;
+}
+.topbar {
+align-items: flex-start;
+flex-direction: column;
+}
+.topbar-right {
+width: 100%;
+flex-wrap: wrap;
+}
+.date-box {
+flex: 1;
+}
+.kpi-grid {
+grid-template-columns: 1fr;
+}
+.panel {
+padding: 15px;
+}
+.chart-wrap {
+height: 220px;
+}
+.legend {
+display: none;
+}
+}
+@media print {
+body {
+padding: 0;
+background: white;
+}
+.app {
+border: 0;
+box-shadow: none;
+}
+.sidebar,
+.topbar-right,
+.action-btn {
+display: none !important;
+}
+.main {
+padding: 0;
+}
+.panel,
+.kpi {
+color: #111;
+border: 1px solid #ddd;
+background: white;
+box-shadow: none;
+}
+}
+</style>
+</head>
+<body>
+<div id="loading" class="loading">
+<div class="loading-card">
+<span class="spinner"></span>
+<span>Loading FreshTrack dashboard...</span>
+</div>
+</div>
+<div class="app">
+<aside class="sidebar">
+<div class="brand">
+<div class="brand-mark">FT</div>
+<div>
+<h2 class="brand-title">FreshTrack</h2>
+<p class="brand-subtitle">Operations workspace</p>
+</div>
+</div>
+<div class="nav-label">Workspace</div>
+<button class="nav-item active" data-home="1" onclick="goHome()">
+<span class="nav-icon">⌂</span>
+<span>Dashboard</span>
+</button>
+<button class="nav-item" data-card="orders-panel"
+onclick="openCardFromNav('orders-panel')">
+<span class="nav-icon">▦</span>
+<span>Orders</span>
+</button>
+<button class="nav-item" data-card="status-panel"
+onclick="openCardFromNav('status-panel')">
+<span class="nav-icon">◔</span>
+<span>Order Status</span>
+</button>
+<button class="nav-item" data-card="performance-panel"
+onclick="openCardFromNav('performance-panel')">
+<span class="nav-icon">◈</span>
+<span>Performance</span>
+</button>
+<button class="nav-item" data-card="picker-month-panel"
+onclick="openCardFromNav('picker-month-panel')">
+<span class="nav-icon">♛</span>
+<span>Pickers This Month</span>
+</button>
+<button class="nav-item" data-card="products-panel"
+onclick="openCardFromNav('products-panel')">
+<span class="nav-icon">▧</span>
+<span>Products</span>
+</button>
+<button class="nav-item" data-card="stock-panel"
+onclick="openCardFromNav('stock-panel')">
+<span class="nav-icon">⚠</span>
+<span>Out of Stock</span>
+</button>
+<button class="nav-item" data-card="team-panel"
+onclick="openCardFromNav('team-panel')">
+<span class="nav-icon">☺</span>
+<span>Team</span>
+</button>
+<button class="nav-item" data-card="logs-panel"
+onclick="openCardFromNav('logs-panel')">
+<span class="nav-icon">≡</span>
+<span>Operations Logs</span>
+</button>
+<div class="nav-label">Actions</div>
+<button class="nav-item" onclick="refreshDashboard()">
+<span class="nav-icon">↻</span>
+<span>Refresh Data</span>
+</button>
+<button class="nav-item" onclick="window.print()">
+<span class="nav-icon">▣</span>
+<span>Print Report</span>
+</button>
+<div class="sidebar-bottom">
+<p>
+<span class="status-dot"></span>
+System status
+</p>
+<strong>Live and connected</strong>
+</div>
+</aside>
+<main class="main">
+<header class="topbar">
+<div>
+<p class="eyebrow">FreshTrack admin analytics</p>
+<h1>Operations Dashboard</h1>
+</div>
+<div class="topbar-right">
+<div class="build-tag" title="Which version of this page is being served">
+Light · v3
+</div>
+<div id="current-date" class="date-box">Loading date...</div>
+<button class="action-btn secondary"
+onclick="openAdmin()">
+← Admin
+</button>
+<button class="action-btn"
+onclick="toggleFullScreen()">
+⛶ Full screen
+</button>
+<button class="action-btn secondary"
+onclick="refreshDashboard()">
+↻ Refresh
+</button>
+</div>
+</header>
+<section class="kpi-grid">
+<article class="kpi" style="--kpi-color: var(--purple)">
+<div class="kpi-head">
+<span>Total products</span>
+<span class="kpi-icon">▧</span>
+</div>
+<div id="total-products" class="kpi-value">—</div>
+<div class="kpi-note">Products registered in DATA</div>
+</article>
+<article class="kpi" style="--kpi-color: var(--cyan)">
+<div class="kpi-head">
+<span>Total orders</span>
+<span class="kpi-icon">▦</span>
+</div>
+<div id="total-orders" class="kpi-value">—</div>
+<div class="kpi-note">Orders recorded in PickingLogs</div>
+</article>
+<article class="kpi" style="--kpi-color: var(--green)">
+<div class="kpi-head">
+<span>Completed orders</span>
+<span class="kpi-icon">✓</span>
+</div>
+<div id="completed-orders" class="kpi-value">—</div>
+<div class="kpi-note">Successfully completed operations</div>
+</article>
+<article class="kpi" style="--kpi-color: var(--orange)">
+<div class="kpi-head">
+<span>Average time</span>
+<span class="kpi-icon">◷</span>
+</div>
+<div id="average-time" class="kpi-value">—</div>
+<div class="kpi-note">Minutes per completed order</div>
+</article>
+</section>
+<section class="content-grid">
+<article id="orders-panel" class="panel">
+<div class="panel-header">
+<div>
+<h2 class="panel-title">Order activity</h2>
+<p class="panel-subtitle">
+Orders created by day of the week
+</p>
+</div>
+<div class="legend">
+<span>
+<i></i>
+Orders
+</span>
+</div>
+</div>
+<div class="chart-wrap">
+<canvas id="activity-chart"></canvas>
+</div>
+</article>
+<article id="status-panel" class="panel">
+<div class="panel-header">
+<div>
+<h2 class="panel-title">Order status</h2>
+<p class="panel-subtitle">
+Current operational distribution
+</p>
+</div>
+</div>
+<div class="status-list">
+<div class="status-row">
+<span>Pending</span>
+<div class="progress">
+<span id="pending-progress"></span>
+</div>
+<strong id="pending-count">0</strong>
+</div>
+<div class="status-row">
+<span>Started</span>
+<div class="progress">
+<span id="started-progress"></span>
+</div>
+<strong id="started-count">0</strong>
+</div>
+<div class="status-row">
+<span>Completed</span>
+<div class="progress">
+<span id="completed-progress"></span>
+</div>
+<strong id="completed-count">0</strong>
+</div>
+<div class="status-row">
+<span>Cancelled</span>
+<div class="progress">
+<span id="cancelled-progress"></span>
+</div>
+<strong id="cancelled-count">0</strong>
+</div>
+<div class="status-row">
+<span>Other</span>
+<div class="progress">
+<span id="other-progress"></span>
+</div>
+<strong id="other-count">0</strong>
+</div>
+</div>
+</article>
+</section>
+<section id="picker-month-section" class="pm-section">
+<article id="picker-month-panel" class="panel pm-panel">
+<div class="panel-header">
+<div>
+<div class="pm-title-row">
+<span class="pm-crown">♛</span>
+<h2 class="panel-title">Picker Performance This Month</h2>
+</div>
+<p id="pm-subtitle" class="panel-subtitle">
+Loading performance data...
+</p>
+</div>
+<div class="card-actions">
+<button type="button"
+class="pm-print-btn"
+onclick="printPickerMonthPanel()">
+<span>▣</span>
+Print
+</button>
+</div>
+</div>
+<div class="pm-controls">
+<div class="pm-field">
+<label class="pm-label" for="pm-date-from">From</label>
+<input type="date"
+id="pm-date-from"
+class="pm-input"
+onchange="renderPickerMonthPanel()">
+</div>
+<div class="pm-field">
+<label class="pm-label" for="pm-date-until">Until</label>
+<input type="date"
+id="pm-date-until"
+class="pm-input"
+onchange="renderPickerMonthPanel()">
+</div>
+<div class="pm-field">
+<span class="pm-label">Measure by</span>
+<div class="pm-segment">
+<button type="button"
+id="pm-metric-orders"
+class="active"
+onclick="setPickerMonthMetric('orders')">
+Orders Picked
+</button>
+<button type="button"
+id="pm-metric-items"
+onclick="setPickerMonthMetric('items')">
+Items Picked
+</button>
+</div>
+</div>
+<div class="pm-field">
+<span class="pm-label">Pickers</span>
+<button type="button"
+id="pm-picker-btn"
+class="pm-picker-btn"
+onclick="togglePickerMonthMenu(event)">
+<span id="pm-picker-label">All Pickers</span>
+<span class="pm-caret">▾</span>
+</button>
+<div id="pm-picker-menu" class="pm-menu">
+<label class="pm-menu-all">
+<input type="checkbox"
+id="pm-picker-all"
+onchange="togglePickerMonthSelectAll(this.checked)">
+All Pickers
+</label>
+<div id="pm-picker-checkboxes"></div>
+</div>
+</div>
+</div>
+<div class="pm-links">
+<button type="button"
+class="pm-link"
+onclick="resetPickerMonthToThisMonth()">
+Reset to this month
+</button>
+<button type="button"
+class="pm-link muted"
+onclick="clearPickerMonthDateRange()">
+Show all-time
+</button>
+</div>
+<div id="pm-body" class="pm-body">
+<div class="empty-state">
+Loading performance data...
+</div>
+</div>
+</article>
+</section>
+<section class="bottom-grid">
+<article id="performance-panel" class="panel">
+<div class="panel-header">
+<div>
+<h2 class="panel-title">Picker performance</h2>
+<p class="panel-subtitle">
+Completed orders and average completion time
+</p>
+</div>
+</div>
+<div id="performance-table"
+class="table-wrap">
+<div class="empty-state">
+No performance data yet.
+</div>
+</div>
+</article>
+<article id="products-panel" class="panel">
+<div class="panel-header">
+<div>
+<h2 class="panel-title">Top products</h2>
+<p class="panel-subtitle">
+Products appearing most often in picking orders
+</p>
+</div>
+</div>
+<div id="products-table"
+class="table-wrap">
+<div class="empty-state">
+No product data yet.
+</div>
+</div>
+</article>
+</section>
+<section class="bottom-grid">
+<article id="stock-panel" class="panel">
+<div class="panel-header">
+<div>
+<h2 class="panel-title">Out-of-stock products</h2>
+<p class="panel-subtitle">
+Products marked with zero or unavailable quantity
+</p>
+</div>
+</div>
+<div id="stock-list" class="stock-list">
+<div class="empty-state">
+No out-of-stock products detected.
+</div>
+</div>
+<div class="stock-reports">
+<h3 class="stock-reports-title">
+Reported out of stock while picking
+</h3>
+<div id="stock-reports" class="stock-list">
+<div class="empty-state">
+No out-of-stock reports.
+</div>
+</div>
+</div>
+</article>
+<article id="team-panel" class="panel">
+<div class="panel-header">
+<div>
+<h2 class="panel-title">Team overview</h2>
+<p class="panel-subtitle">
+Registered picker and recipient profiles
+</p>
+</div>
+</div>
+<div id="team-table" class="table-wrap">
+<div class="empty-state">
+No team data yet.
+</div>
+</div>
+</article>
+</section>
+<section id="logs-panel" class="panel logs-panel">
+<div class="panel-header">
+<div>
+<h2 class="panel-title">Recent operations logs</h2>
+<p class="panel-subtitle">
+Latest dispatch and picking activity
+</p>
+</div>
+<span class="badge green">
+Auto-refreshed
+</span>
+</div>
+<div id="logs-table" class="table-wrap">
+<div class="empty-state">
+No operations logs yet.
+</div>
+</div>
+</section>
+</main>
+</div>
+<div id="card-backdrop" class="card-backdrop" onclick="closeCardLarge()"></div>
+<div id="toast" class="toast"></div>
+<script>
+let dashboardData = {
+items: [],
+recipients: [],
+logs: []
+};
+document.addEventListener('DOMContentLoaded', function() {
+updateDate();
+refreshDashboard();
+window.addEventListener('resize', function() {
+if (dashboardData.logs) {
+drawActivityChart(getCardLogs('orders-panel'));
+}
+});
+});
+function refreshDashboard() {
+showLoading(true);
+if (
+typeof google === 'undefined' ||
+!google.script ||
+!google.script.run
+) {
+showLoading(false);
+showToast('Google Apps Script connection is unavailable.');
+return;
+}
+google.script.run
+.withSuccessHandler(function(result) {
+showLoading(false);
+if (!result || result.success === false) {
+showToast(
+result && result.error
+? result.error
+: 'Unable to load dashboard data.'
+);
+return;
+}
+dashboardData = result;
+renderDashboard(result);
+showToast('Dashboard updated successfully.');
+})
+.withFailureHandler(function(error) {
+showLoading(false);
+showToast(
+error && error.message
+? error.message
+: 'Dashboard loading failed.'
+);
+})
+.getDashboardData();
+}
+function renderDashboard(data) {
+const items = Array.isArray(data.items)
+? data.items
+: [];
+const recipients = Array.isArray(data.recipients)
+? data.recipients
+: [];
+const logs = Array.isArray(data.logs)
+? data.logs
+: [];
+document.getElementById('total-products')
+.textContent = formatNumber(items.length);
+document.getElementById('total-orders')
+.textContent = formatNumber(logs.length);
+const completed = logs.filter(function(log) {
+return normalizeStatus(log.status) === 'completed';
+});
+document.getElementById('completed-orders')
+.textContent = formatNumber(completed.length);
+document.getElementById('average-time')
+.textContent = formatAverageMinutes(completed);
+refreshPickerMonthPanel();
+renderRangedCards();
+}
+function updateStatusPanel(logs) {
+const counts = {
+pending: 0,
+started: 0,
+completed: 0,
+cancelled: 0,
+other: 0
+};
+logs.forEach(function(log) {
+const status = normalizeStatus(log.status);
+if (status === 'pending') {
+counts.pending++;
+} else if (
+status === 'started' ||
+status === 'in progress' ||
+status === 'active'
+) {
+counts.started++;
+} else if (
+status === 'completed' ||
+status === 'complete' ||
+status === 'solved'
+) {
+counts.completed++;
+} else if (
+status === 'cancelled' ||
+status === 'canceled'
+) {
+counts.cancelled++;
+} else {
+counts.other++;
+}
+});
+const total = Math.max(logs.length, 1);
+setStatus('pending', counts.pending, total);
+setStatus('started', counts.started, total);
+setStatus('completed', counts.completed, total);
+setStatus('cancelled', counts.cancelled, total);
+setStatus('other', counts.other, total);
+}
+function setStatus(name, count, total) {
+document.getElementById(name + '-count')
+.textContent = formatNumber(count);
+const progress = Math.round((count / total) * 100);
+document.getElementById(name + '-progress')
+.style.width = progress + '%';
+}
+function renderPerformanceTable(logs) {
+const completedLogs = logs.filter(function(log) {
+const status = normalizeStatus(log.status);
+return status === 'completed' ||
+status === 'complete' ||
+status === 'solved';
+});
+const pickerMap = {};
+completedLogs.forEach(function(log) {
+const picker = cleanText(log.picker) || 'Unassigned';
+const minutes = parseMinutes(log.minutesTaken);
+if (!pickerMap[picker]) {
+pickerMap[picker] = {
+name: picker,
+orders: 0,
+minutes: []
+};
+}
+pickerMap[picker].orders++;
+if (minutes !== null) {
+pickerMap[picker].minutes.push(minutes);
+}
+});
+const rows = Object.keys(pickerMap)
+.map(function(key) {
+const picker = pickerMap[key];
+return {
+name: picker.name,
+orders: picker.orders,
+average: picker.minutes.length
+? Math.round(
+picker.minutes.reduce(function(a, b) {
+return a + b;
+}, 0) / picker.minutes.length
+)
+: null
+};
+})
+.sort(function(a, b) {
+return b.orders - a.orders;
+})
+.slice(0, 8);
+if (!rows.length) {
+setEmpty('performance-table', 'No completed picker data yet.');
+return;
+}
+let html = `
+<table>
+<thead>
+<tr>
+<th>Picker</th>
+<th>Orders</th>
+<th>Avg. time</th>
+<th>Rating</th>
+</tr>
+</thead>
+<tbody>
+`;
+rows.forEach(function(row) {
+const rating = row.average === null
+? '—'
+: row.average <= 20
+? 'Excellent'
+: row.average <= 45
+? 'Good'
+: 'Review';
+const badgeClass = rating === 'Excellent'
+? 'green'
+: rating === 'Review'
+? 'red'
+: 'orange';
+html += `
+<tr>
+<td>${escapeHtml(row.name)}</td>
+<td>${formatNumber(row.orders)}</td>
+<td>${row.average === null
+? '—'
+: row.average + ' min'}</td>
+<td>
+<span class="badge ${badgeClass}">
+${rating}
+</span>
+</td>
+</tr>
+`;
+});
+html += '</tbody></table>';
+document.getElementById('performance-table')
+.innerHTML = html;
+}
+/* ===== Picker Performance This Month ===== */
+const PM_COLORS = [
+'#bb55ee', '#19d8df', '#468ff0', '#43dd9b', '#ffb454',
+'#ff6488', '#7c42e7', '#eab308', '#14b8a6', '#ec4899'
+];
+let PM_METRIC = 'orders'; // 'orders' | 'items'
+let PM_SELECTED = null; // null = all pickers, otherwise a Set
+let PM_DEFAULTS_APPLIED = false;
+function pmPad(number) {
+return String(number).padStart(2, '0');
+}
+// Local-time YYYY-MM-DD (toISOString() would shift the day
+// backwards for timezones ahead of UTC).
+function pmToISO(date) {
+return date.getFullYear() + '-' +
+pmPad(date.getMonth() + 1) + '-' +
+pmPad(date.getDate());
+}
+function pmFormatDate(iso) {
+return iso.slice(8, 10) + '/' +
+iso.slice(5, 7) + '/' +
+iso.slice(0, 4);
+}
+// Converts a log timestamp into YYYY-MM-DD for range filtering.
+function getLogDateKey(value) {
+const text = cleanText(value);
+if (!text) {
+return '';
+}
+let match = text.match(/^(\d{4})-(\d{2})-(\d{2})/);
+if (match) {
+return match[1] + '-' + match[2] + '-' + match[3];
+}
+match = text.match(/^(\d{1,2})[\/.-](\d{1,2})[\/.-](\d{4})/);
+if (match) {
+return match[3] + '-' + pmPad(match[2]) + '-' + pmPad(match[1]);
+}
+const parsed = new Date(text);
+return Number.isNaN(parsed.getTime())
+? ''
+: pmToISO(parsed);
+}
+// "ADMIN" and "MATRIX" are passcode entries, not real pickers.
+function isRealPickerName(name) {
+const upper = cleanText(name).toUpperCase();
+return upper !== 'ADMIN' && upper !== 'MATRIX';
+}
+function getPickerMonthNames() {
+const names = [];
+(dashboardData.recipients || []).forEach(function(person) {
+const name = cleanText(person && person.name);
+if (name && isRealPickerName(name) && names.indexOf(name) === -1) {
+names.push(name);
+}
+});
+(dashboardData.logs || []).forEach(function(log) {
+const name = cleanText(log && log.picker);
+if (name && isRealPickerName(name) && names.indexOf(name) === -1) {
+names.push(name);
+}
+});
+names.sort(function(a, b) {
+return a.localeCompare(b);
+});
+return names;
+}
+function setPickerMonthMetric(metric) {
+PM_METRIC = metric;
+document.getElementById('pm-metric-orders')
+.classList.toggle('active', metric === 'orders');
+document.getElementById('pm-metric-items')
+.classList.toggle('active', metric === 'items');
+renderPickerMonthPanel();
+}
+function resetPickerMonthToThisMonth() {
+const now = new Date();
+const first = new Date(now.getFullYear(), now.getMonth(), 1);
+const last = new Date(now.getFullYear(), now.getMonth() + 1, 0);
+document.getElementById('pm-date-from').value = pmToISO(first);
+document.getElementById('pm-date-until').value = pmToISO(last);
+PM_DEFAULTS_APPLIED = true;
+renderPickerMonthPanel();
+}
+function clearPickerMonthDateRange() {
+document.getElementById('pm-date-from').value = '';
+document.getElementById('pm-date-until').value = '';
+PM_DEFAULTS_APPLIED = true;
+renderPickerMonthPanel();
+}
+function togglePickerMonthMenu(event) {
+if (event) {
+event.stopPropagation();
+}
+document.getElementById('pm-picker-menu')
+.classList.toggle('open');
+}
+document.addEventListener('click', function(event) {
+const menu = document.getElementById('pm-picker-menu');
+if (menu && !menu.contains(event.target)) {
+menu.classList.remove('open');
+}
+});
+function populatePickerMonthMenu() {
+const container = document.getElementById('pm-picker-checkboxes');
+const names = getPickerMonthNames();
+container.innerHTML = names.map(function(name) {
+const checked = !PM_SELECTED || PM_SELECTED.has(name)
+? 'checked'
+: '';
+return `
+<label>
+<input type="checkbox"
+class="pm-picker-checkbox"
+value="${escapeHtml(name)}"
+${checked}
+onchange="handlePickerMonthCheckbox()">
+<span>${escapeHtml(name)}</span>
+</label>
+`;
+}).join('');
+updatePickerMonthPickerUi();
+}
+function togglePickerMonthSelectAll(checked) {
+document.querySelectorAll('.pm-picker-checkbox')
+.forEach(function(box) {
+box.checked = checked;
+});
+handlePickerMonthCheckbox();
+}
+function handlePickerMonthCheckbox() {
+const boxes = Array.from(
+document.querySelectorAll('.pm-picker-checkbox')
+);
+const checked = boxes
+.filter(function(box) { return box.checked; })
+.map(function(box) { return box.value; });
+PM_SELECTED = boxes.length > 0 && checked.length === boxes.length
+? null
+: new Set(checked);
+updatePickerMonthPickerUi();
+renderPickerMonthPanel();
+}
+function updatePickerMonthPickerUi() {
+const boxes = Array.from(
+document.querySelectorAll('.pm-picker-checkbox')
+);
+document.getElementById('pm-picker-all').checked =
+boxes.length > 0 &&
+boxes.every(function(box) { return box.checked; });
+const label = document.getElementById('pm-picker-label');
+if (!PM_SELECTED) {
+label.textContent = 'All Pickers';
+} else if (PM_SELECTED.size === 0) {
+label.textContent = 'No pickers selected';
+} else if (PM_SELECTED.size === 1) {
+label.textContent = Array.from(PM_SELECTED)[0];
+} else {
+label.textContent = PM_SELECTED.size + ' pickers selected';
+}
+}
+// metric 'orders' -> completed orders, credited to the order owner.
+// metric 'items' -> quantity of items marked "Picked", credited to
+// whoever picked them (falls back to order owner).
+function computePickerMonthCounts(fromVal, untilVal) {
+const counts = {};
+const logs = Array.isArray(dashboardData.logs)
+? dashboardData.logs
+: [];
+logs.forEach(function(log) {
+const status = normalizeStatus(log.status);
+if (
+status !== 'completed' &&
+status !== 'complete' &&
+status !== 'solved'
+) {
+return;
+}
+const owner = cleanText(log.picker);
+if (!owner || !cleanText(log.timestamp)) {
+return;
+}
+const day = getLogDateKey(log.timestamp);
+if (fromVal && (!day || day < fromVal)) return;
+if (untilVal && (!day || day > untilVal)) return;
+if (PM_METRIC === 'items') {
+parseOrderItems(log.rawItemsJson).forEach(function(item) {
+if (!item || item.pickerStatus !== 'Picked') {
+return;
+}
+const who = cleanText(item.pickedBy) || owner;
+if (!isRealPickerName(who)) return;
+if (PM_SELECTED && !PM_SELECTED.has(who)) return;
+const quantity = parseInt(item.qty, 10) || 1;
+counts[who] = (counts[who] || 0) + quantity;
+});
+} else {
+if (!isRealPickerName(owner)) return;
+if (PM_SELECTED && !PM_SELECTED.has(owner)) return;
+counts[owner] = (counts[owner] || 0) + 1;
+}
+});
+return counts;
+}
+function buildPickerMonthPie(entries, total) {
+const size = 220;
+const radius = 100;
+const center = size / 2;
+let start = -90;
+let shapes = '';
+let labels = '';
+entries.forEach(function(entry, index) {
+const share = entry.count / total;
+const angle = share * 360;
+const end = start + angle;
+const color = PM_COLORS[index % PM_COLORS.length];
+if (entries.length === 1) {
+shapes += `<circle cx="${center}" cy="${center}"
+r="${radius}" fill="${color}"
+style="stroke: var(--pie-gap)"
+stroke-width="2"></circle>`;
+} else {
+const a1 = (Math.PI / 180) * start;
+const a2 = (Math.PI / 180) * end;
+const x1 = center + radius * Math.cos(a1);
+const y1 = center + radius * Math.sin(a1);
+const x2 = center + radius * Math.cos(a2);
+const y2 = center + radius * Math.sin(a2);
+const largeArc = angle > 180 ? 1 : 0;
+shapes += `<path d="M ${center} ${center}
+L ${x1.toFixed(2)} ${y1.toFixed(2)}
+A ${radius} ${radius} 0 ${largeArc} 1
+${x2.toFixed(2)} ${y2.toFixed(2)} Z"
+fill="${color}"
+style="stroke: var(--pie-gap)"
+stroke-width="2"></path>`;
+}
+if (share >= 0.08) {
+const mid = (Math.PI / 180) * (start + angle / 2);
+const labelRadius = entries.length === 1 ? 0 : radius * 0.62;
+const lx = center + labelRadius * Math.cos(mid);
+const ly = center + labelRadius * Math.sin(mid);
+const name = entry.name.length > 10
+? entry.name.slice(0, 9) + '…'
+: entry.name;
+labels += `
+<text x="${lx.toFixed(2)}" y="${(ly - 3).toFixed(2)}"
+text-anchor="middle" fill="white"
+stroke="rgba(8,13,29,0.55)" stroke-width="2.5"
+paint-order="stroke" font-size="10"
+font-weight="800">${escapeHtml(name.toUpperCase())}</text>
+<text x="${lx.toFixed(2)}" y="${(ly + 11).toFixed(2)}"
+text-anchor="middle" fill="white"
+stroke="rgba(8,13,29,0.55)" stroke-width="2.5"
+paint-order="stroke" font-size="11"
+font-weight="900">${Math.round(share * 100)}%</text>
+`;
+}
+start = end;
+});
+return `<svg viewBox="0 0 ${size} ${size}" role="img"
+aria-label="Picker performance pie chart">${shapes}${labels}</svg>`;
+}
+function renderPickerMonthPanel() {
+const body = document.getElementById('pm-body');
+const fromInput = document.getElementById('pm-date-from');
+const untilInput = document.getElementById('pm-date-until');
+const subtitle = document.getElementById('pm-subtitle');
+if (!body) {
+return;
+}
+if (!PM_DEFAULTS_APPLIED && !fromInput.value && !untilInput.value) {
+const now = new Date();
+fromInput.value = pmToISO(
+new Date(now.getFullYear(), now.getMonth(), 1)
+);
+untilInput.value = pmToISO(
+new Date(now.getFullYear(), now.getMonth() + 1, 0)
+);
+PM_DEFAULTS_APPLIED = true;
+}
+const fromVal = fromInput.value || null;
+const untilVal = untilInput.value || null;
+let range = 'All time';
+if (fromVal && untilVal) {
+range = pmFormatDate(fromVal) + ' – ' + pmFormatDate(untilVal);
+} else if (fromVal) {
+range = 'From ' + pmFormatDate(fromVal);
+} else if (untilVal) {
+range = 'Until ' + pmFormatDate(untilVal);
+}
+subtitle.textContent =
+(PM_METRIC === 'items' ? 'Items picked' : 'Orders picked') +
+' by picker · ' + range;
+if (fromVal && untilVal && fromVal > untilVal) {
+setEmpty('pm-body', 'The start date is after the end date.');
+return;
+}
+if (PM_SELECTED && PM_SELECTED.size === 0) {
+setEmpty('pm-body', 'Select at least one picker to see the chart.');
+return;
+}
+const counts = computePickerMonthCounts(fromVal, untilVal);
+const entries = Object.keys(counts)
+.map(function(name) {
+return { name: name, count: counts[name] };
+})
+.sort(function(a, b) {
+return b.count - a.count;
+});
+const total = entries.reduce(function(sum, entry) {
+return sum + entry.count;
+}, 0);
+if (!total) {
+setEmpty(
+'pm-body',
+PM_METRIC === 'items'
+? 'No items picked in this date range.'
+: 'No completed picks recorded in this date range.'
+);
+return;
+}
+const unit = PM_METRIC === 'items' ? 'items' : 'picks';
+const rows = entries.map(function(entry, index) {
+const color = PM_COLORS[index % PM_COLORS.length];
+const percent = Math.round((entry.count / total) * 100);
+return `
+<div class="pm-row">
+<div class="pm-row-name">
+<span class="pm-dot"
+style="background:${color}"></span>
+${index === 0 ? '<span class="pm-crown">♛</span>' : ''}
+<span>${escapeHtml(entry.name)}</span>
+</div>
+<span class="pm-row-value">
+${formatNumber(entry.count)} ${unit} • ${percent}%
+</span>
+</div>
+`;
+}).join('');
+body.innerHTML = `
+<div class="pm-pie">${buildPickerMonthPie(entries, total)}</div>
+<div>${rows}</div>
+`;
+}
+/* ===== Date range on every card ===== */
+const CARD_RANGES = {}; // cardId -> { from, until } (YYYY-MM-DD)
+const CARD_RENDERERS = {
+'orders-panel': function() {
+drawActivityChart(getCardLogs('orders-panel'));
+},
+'status-panel': function() {
+updateStatusPanel(getCardLogs('status-panel'));
+},
+'performance-panel': function() {
+renderPerformanceTable(getCardLogs('performance-panel'));
+},
+'products-panel': function() {
+renderProductsTable(
+getCardLogs('products-panel'),
+Array.isArray(dashboardData.items) ? dashboardData.items : []
+);
+},
+'stock-panel': function() {
+renderStockList(
+Array.isArray(dashboardData.items) ? dashboardData.items : []
+);
+renderStockReports(getCardLogs('stock-panel'));
+},
+'team-panel': function() {
+const selected = CARD_PICKERS['team-panel'];
+const people = (
+Array.isArray(dashboardData.recipients)
+? dashboardData.recipients
+: []
+).filter(function(person) {
+return !selected || selected.has(cleanText(person.name));
+});
+renderTeamTable(people, getCardLogs('team-panel'));
+},
+'logs-panel': function() {
+renderLogsTable(getCardLogs('logs-panel'));
+}
+};
+// Which pickers each card is limited to (null = everybody).
+const CARD_PICKERS = {};
+// These cards look at individual items, so the picker filter
+// follows whoever actually picked each item.
+const CARD_ITEM_LEVEL = {
+'products-panel': true,
+'stock-panel': true
+};
+// Logs that fall inside a card's own date range and picker selection.
+function getCardLogs(cardId) {
+let logs = Array.isArray(dashboardData.logs)
+? dashboardData.logs
+: [];
+const range = CARD_RANGES[cardId];
+if (range && (range.from || range.until)) {
+logs = logs.filter(function(log) {
+const day = getLogDateKey(log.timestamp);
+if (!day) return false;
+if (range.from && day < range.from) return false;
+if (range.until && day > range.until) return false;
+return true;
+});
+}
+const selected = CARD_PICKERS[cardId];
+if (!selected) {
+return logs;
+}
+if (!CARD_ITEM_LEVEL[cardId]) {
+return logs.filter(function(log) {
+return selected.has(cleanText(log.picker));
+});
+}
+const result = [];
+logs.forEach(function(log) {
+const owner = cleanText(log.picker);
+const kept = parseOrderItems(log.rawItemsJson)
+.filter(function(item) {
+const who = cleanText(item && item.pickedBy) || owner;
+return selected.has(who);
+});
+if (kept.length) {
+result.push(
+Object.assign({}, log, {
+rawItemsJson: JSON.stringify(kept)
+})
+);
+}
+});
+return result;
+}
+function renderRangedCard(cardId) {
+const render = CARD_RENDERERS[cardId];
+if (render) {
+render();
+}
+updateCardRangeNote(cardId);
+}
+function renderRangedCards() {
+populateCardPickerMenus();
+Object.keys(CARD_RENDERERS).forEach(renderRangedCard);
+}
+function updateCardRangeNote(cardId) {
+const note = document.querySelector(
+'[data-range-for="' + cardId + '"] .card-range-note'
+);
+if (!note) {
+return;
+}
+const range = CARD_RANGES[cardId] || {};
+note.classList.remove('error');
+if (range.from && range.until && range.from > range.until) {
+note.textContent = 'The start date is after the end date.';
+note.classList.add('error');
+return;
+}
+if (CARD_PICKERS[cardId] && CARD_PICKERS[cardId].size === 0) {
+note.textContent = 'No pickers selected.';
+note.classList.add('error');
+return;
+}
+let label = 'All time';
+if (range.from && range.until) {
+label = pmFormatDate(range.from) + ' – ' +
+pmFormatDate(range.until);
+} else if (range.from) {
+label = 'From ' + pmFormatDate(range.from);
+} else if (range.until) {
+label = 'Until ' + pmFormatDate(range.until);
+}
+const count = getCardLogs(cardId).length;
+note.textContent = label + ' · ' + formatNumber(count) +
+(count === 1 ? ' order' : ' orders');
+}
+function handleCardRangeChange(cardId) {
+CARD_RANGES[cardId] = {
+from: document.getElementById(cardId + '-from').value,
+until: document.getElementById(cardId + '-until').value
+};
+renderRangedCard(cardId);
+}
+function setCardRangePreset(cardId, preset) {
+const now = new Date();
+let from = '';
+let until = '';
+if (preset === 'today') {
+from = until = pmToISO(now);
+} else if (preset === 'month') {
+from = pmToISO(new Date(now.getFullYear(), now.getMonth(), 1));
+until = pmToISO(
+new Date(now.getFullYear(), now.getMonth() + 1, 0)
+);
+}
+document.getElementById(cardId + '-from').value = from;
+document.getElementById(cardId + '-until').value = until;
+handleCardRangeChange(cardId);
+}
+function buildCardRangeBar(cardId) {
+return `
+<div class="card-range" data-range-for="${cardId}">
+<div class="pm-field">
+<label class="pm-label" for="${cardId}-from">From</label>
+<input type="date" id="${cardId}-from"
+class="pm-input"
+onchange="handleCardRangeChange('${cardId}')">
+</div>
+<div class="pm-field">
+<label class="pm-label" for="${cardId}-until">Until</label>
+<input type="date" id="${cardId}-until"
+class="pm-input"
+onchange="handleCardRangeChange('${cardId}')">
+</div>
+<div class="pm-field">
+<span class="pm-label">Pickers</span>
+<button type="button" id="${cardId}-picker-btn"
+class="pm-picker-btn"
+onclick="toggleCardPickerMenu('${cardId}', event)">
+<span id="${cardId}-picker-label">All Pickers</span>
+<span class="pm-caret">▾</span>
+</button>
+<div id="${cardId}-picker-menu" class="pm-menu">
+<label class="pm-menu-all">
+<input type="checkbox" id="${cardId}-picker-all"
+onchange="toggleCardPickerAll('${cardId}', this.checked)">
+All Pickers
+</label>
+<div id="${cardId}-picker-checkboxes"></div>
+</div>
+</div>
+<div class="card-range-presets">
+<button type="button" class="pm-link"
+onclick="setCardRangePreset('${cardId}', 'today')">
+Today
+</button>
+<button type="button" class="pm-link"
+onclick="setCardRangePreset('${cardId}', 'month')">
+This month
+</button>
+<button type="button" class="pm-link muted"
+onclick="setCardRangePreset('${cardId}', 'all')">
+All time
+</button>
+</div>
+<span class="card-range-note"></span>
+</div>
+`;
+}
+// Products that pickers reported as out of stock inside the range.
+function renderStockReports(logs) {
+const map = {};
+logs.forEach(function(log) {
+const day = getLogDateKey(log.timestamp);
+parseOrderItems(log.rawItemsJson).forEach(function(item) {
+if (!item || item.pickerStatus !== 'Out Of Stock') {
+return;
+}
+const code = cleanText(item.barcode);
+const name = cleanText(item.description);
+const key = code || name;
+if (!key) {
+return;
+}
+if (!map[key]) {
+map[key] = {
+name: name || 'Unknown product',
+code: code,
+times: 0,
+orders: {},
+lastDay: '',
+lastPicker: ''
+};
+}
+const entry = map[key];
+entry.times++;
+entry.orders[cleanText(log.orderId) || String(entry.times)] = 1;
+if (day >= entry.lastDay) {
+entry.lastDay = day;
+entry.lastPicker =
+cleanText(item.pickedBy) || cleanText(log.picker);
+}
+});
+});
+const rows = Object.keys(map)
+.map(function(key) { return map[key]; })
+.sort(function(a, b) { return b.times - a.times; })
+.slice(0, 8);
+if (!rows.length) {
+setEmpty(
+'stock-reports',
+'No out-of-stock reports in this date range.'
+);
+return;
+}
+document.getElementById('stock-reports').innerHTML =
+rows.map(function(entry) {
+const orderCount = Object.keys(entry.orders).length;
+const details = [
+entry.code,
+entry.lastDay ? 'Last ' + pmFormatDate(entry.lastDay) : '',
+entry.lastPicker ? 'by ' + entry.lastPicker : '',
+orderCount + (orderCount === 1 ? ' order' : ' orders')
+].filter(Boolean).join(' · ');
+return `
+<div class="stock-item">
+<div class="stock-item-main">
+<div class="stock-item-name">
+${escapeHtml(entry.name)}
+</div>
+<div class="stock-item-code">
+${escapeHtml(details)}
+</div>
+</div>
+<div class="stock-number">${entry.times}x</div>
+</div>
+`;
+}).join('');
+}
+/* ===== Picker selection on every card ===== */
+function closeAllCardMenus() {
+document.querySelectorAll('.pm-menu.open').forEach(function(menu) {
+menu.classList.remove('open');
+});
+}
+function positionCardPickerMenu(cardId) {
+const button = document.getElementById(cardId + '-picker-btn');
+const menu = document.getElementById(cardId + '-picker-menu');
+const rect = button.getBoundingClientRect();
+menu.style.minWidth = rect.width + 'px';
+const width = menu.offsetWidth;
+const height = menu.offsetHeight;
+let top = rect.bottom + 6;
+if (
+top + height > window.innerHeight - 8 &&
+rect.top - height - 6 > 8
+) {
+top = rect.top - height - 6;
+}
+menu.style.top = Math.max(8, top) + 'px';
+menu.style.left = Math.max(
+8,
+Math.min(rect.left, window.innerWidth - width - 8)
+) + 'px';
+}
+function toggleCardPickerMenu(cardId, event) {
+if (event) {
+event.stopPropagation();
+}
+const menu = document.getElementById(cardId + '-picker-menu');
+const wasOpen = menu.classList.contains('open');
+closeAllCardMenus();
+if (!wasOpen) {
+menu.classList.add('open');
+positionCardPickerMenu(cardId);
+}
+}
+function populateCardPickerMenus() {
+const names = getPickerMonthNames();
+Object.keys(CARD_RENDERERS).forEach(function(cardId) {
+const container = document.getElementById(
+cardId + '-picker-checkboxes'
+);
+if (!container) {
+return;
+}
+const selected = CARD_PICKERS[cardId];
+container.innerHTML = names.map(function(name) {
+const checked = !selected || selected.has(name)
+? 'checked'
+: '';
+return `
+<label>
+<input type="checkbox"
+value="${escapeHtml(name)}"
+${checked}
+onchange="handleCardPickerChange('${cardId}')">
+<span>${escapeHtml(name)}</span>
+</label>
+`;
+}).join('');
+updateCardPickerUi(cardId);
+});
+}
+function getCardPickerBoxes(cardId) {
+return Array.from(
+document.querySelectorAll(
+'#' + cardId + '-picker-checkboxes input'
+)
+);
+}
+function updateCardPickerUi(cardId) {
+const boxes = getCardPickerBoxes(cardId);
+const selected = CARD_PICKERS[cardId];
+const all = document.getElementById(cardId + '-picker-all');
+const label = document.getElementById(cardId + '-picker-label');
+if (all) {
+all.checked = boxes.length > 0 &&
+boxes.every(function(box) { return box.checked; });
+}
+if (!label) {
+return;
+}
+if (!selected) {
+label.textContent = 'All Pickers';
+} else if (selected.size === 0) {
+label.textContent = 'No pickers selected';
+} else if (selected.size === 1) {
+label.textContent = Array.from(selected)[0];
+} else {
+label.textContent = selected.size + ' pickers selected';
+}
+}
+function handleCardPickerChange(cardId) {
+const boxes = getCardPickerBoxes(cardId);
+const checked = boxes
+.filter(function(box) { return box.checked; })
+.map(function(box) { return box.value; });
+CARD_PICKERS[cardId] =
+boxes.length > 0 && checked.length === boxes.length
+? null
+: new Set(checked);
+updateCardPickerUi(cardId);
+renderRangedCard(cardId);
+repositionOpenCardMenus();
+}
+function toggleCardPickerAll(cardId, checked) {
+getCardPickerBoxes(cardId).forEach(function(box) {
+box.checked = checked;
+});
+handleCardPickerChange(cardId);
+}
+document.addEventListener('click', function(event) {
+document.querySelectorAll('.card-range .pm-menu.open')
+.forEach(function(menu) {
+if (!menu.contains(event.target)) {
+menu.classList.remove('open');
+}
+});
+});
+// The list is fixed-position, so keep it attached to its button
+// when the page scrolls or the card content changes size.
+function repositionOpenCardMenus(event) {
+if (
+event &&
+event.target &&
+event.target.closest &&
+event.target.closest('.pm-menu')
+) {
+return;
+}
+document.querySelectorAll('.card-range .pm-menu.open')
+.forEach(function(menu) {
+const cardId = menu.id.replace('-picker-menu', '');
+const button = document.getElementById(cardId + '-picker-btn');
+const rect = button.getBoundingClientRect();
+if (rect.bottom < 0 || rect.top > window.innerHeight) {
+menu.classList.remove('open');
+return;
+}
+positionCardPickerMenu(cardId);
+});
+}
+window.addEventListener('scroll', repositionOpenCardMenus, true);
+window.addEventListener('resize', repositionOpenCardMenus);
+/* ===== Sidebar buttons pop the card open ===== */
+function updateNavActive(cardId) {
+document.body.classList.toggle('card-open', !!cardId);
+document.querySelectorAll('.sidebar .nav-item[data-card]')
+.forEach(function(button) {
+button.classList.toggle(
+'active',
+button.getAttribute('data-card') === cardId
+);
+});
+const home = document.querySelector('.sidebar .nav-item[data-home]');
+if (home) {
+home.classList.toggle('active', !cardId);
+}
+}
+function openCardFromNav(cardId) {
+const panel = document.getElementById(cardId);
+if (!panel) {
+return;
+}
+if (CARD_LARGE && CARD_LARGE.panel === panel) {
+closeCardLarge();
+} else {
+openCardLarge(panel);
+}
+}
+function goHome() {
+closeCardLarge();
+scrollToTop();
+}
+/* ===== Theme colors (used by the canvas chart) ===== */
+function readCssColor(name, fallback) {
+const value = getComputedStyle(document.documentElement)
+.getPropertyValue(name)
+.trim();
+return value || fallback;
+}
+/* ===== Card tools: hide / make bigger (all dashboard cards) ===== */
+const CARD_STATE_KEY = 'freshtrack_dashboard_cards_collapsed';
+let CARD_LARGE = null; // { panel, placeholder, wasCollapsed }
+function cardSlug(text) {
+return 'card-' + String(text || 'panel')
+.toLowerCase()
+.replace(/[^a-z0-9]+/g, '-')
+.replace(/^-+|-+$/g, '');
+}
+function readCollapsedCards() {
+try {
+return JSON.parse(
+localStorage.getItem(CARD_STATE_KEY) || '{}'
+) || {};
+} catch (error) {
+return {};
+}
+}
+function saveCollapsedCard(id, collapsed) {
+try {
+const state = readCollapsedCards();
+if (collapsed) {
+state[id] = 1;
+} else {
+delete state[id];
+}
+localStorage.setItem(CARD_STATE_KEY, JSON.stringify(state));
+} catch (error) {
+// Remembering the choice is optional.
+}
+}
+// The activity chart is a canvas, so it must be redrawn whenever
+// its card changes size or comes back from hidden.
+function redrawCardContent(panel) {
+if (!panel.querySelector('#activity-chart')) {
+return;
+}
+window.setTimeout(function() {
+if (dashboardData && dashboardData.logs) {
+drawActivityChart(getCardLogs('orders-panel'));
+}
+}, 30);
+}
+function setCardCollapsed(panel, collapsed, remember) {
+panel.classList.toggle('card-collapsed', collapsed);
+const button = panel.querySelector('.card-collapse-btn');
+if (button) {
+button.title = collapsed
+? 'Show card content'
+: 'Hide card content';
+button.setAttribute('aria-label', button.title);
+button.setAttribute('aria-expanded', String(!collapsed));
+}
+panel.querySelectorAll('.pm-menu.open').forEach(function(menu) {
+menu.classList.remove('open');
+});
+if (remember && panel.id) {
+saveCollapsedCard(panel.id, collapsed);
+}
+if (!collapsed) {
+redrawCardContent(panel);
+}
+}
+function toggleCardCollapse(button) {
+const panel = button.closest('.panel');
+setCardCollapsed(
+panel,
+!panel.classList.contains('card-collapsed'),
+true
+);
+}
+function setCardLargeButton(panel, open) {
+const button = panel.querySelector('.card-large-btn');
+if (!button) {
+return;
+}
+button.querySelector('.card-large-icon').textContent =
+open ? '✕' : '⛶';
+button.title = open ? 'Close bigger view' : 'Make card bigger';
+button.setAttribute('aria-label', button.title);
+button.setAttribute('aria-pressed', String(open));
+}
+function closeCardLarge() {
+if (!CARD_LARGE) {
+return;
+}
+const state = CARD_LARGE;
+CARD_LARGE = null;
+state.panel.classList.remove('card-large');
+if (state.placeholder.parentNode) {
+state.placeholder.parentNode.removeChild(state.placeholder);
+}
+document.getElementById('card-backdrop').classList.remove('show');
+setCardLargeButton(state.panel, false);
+updateNavActive('');
+state.panel.querySelectorAll('.pm-menu.open').forEach(function(menu) {
+menu.classList.remove('open');
+});
+if (state.wasCollapsed) {
+setCardCollapsed(state.panel, true, false);
+}
+redrawCardContent(state.panel);
+}
+function openCardLarge(panel) {
+closeCardLarge();
+closeAllCardMenus();
+const wasCollapsed = panel.classList.contains('card-collapsed');
+if (wasCollapsed) {
+setCardCollapsed(panel, false, false);
+}
+// Keep an empty slot in the layout while the card floats.
+const placeholder = document.createElement('div');
+placeholder.className = 'card-placeholder';
+placeholder.style.height = panel.offsetHeight + 'px';
+panel.parentNode.insertBefore(placeholder, panel);
+panel.classList.add('card-large');
+document.getElementById('card-backdrop').classList.add('show');
+setCardLargeButton(panel, true);
+updateNavActive(panel.id);
+CARD_LARGE = {
+panel: panel,
+placeholder: placeholder,
+wasCollapsed: wasCollapsed
+};
+redrawCardContent(panel);
+}
+function toggleCardLarge(button) {
+const panel = button.closest('.panel');
+if (CARD_LARGE && CARD_LARGE.panel === panel) {
+closeCardLarge();
+} else {
+openCardLarge(panel);
+}
+}
+// Adds the "bigger" and "hide" buttons to every dashboard card.
+function enhanceDashboardCards() {
+const saved = readCollapsedCards();
+document.querySelectorAll('.main .panel').forEach(function(panel) {
+if (panel.querySelector('.card-collapse-btn')) {
+return;
+}
+const header = panel.querySelector(':scope > .panel-header');
+if (!header) {
+return;
+}
+if (!panel.id) {
+const title = panel.querySelector('.panel-title');
+panel.id = cardSlug(title ? title.textContent : '');
+}
+let actions = header.querySelector('.card-actions');
+if (!actions) {
+actions = document.createElement('div');
+actions.className = 'card-actions';
+// Keep legends / badges next to the buttons on the right.
+Array.from(header.children).slice(1).forEach(function(child) {
+actions.appendChild(child);
+});
+header.appendChild(actions);
+}
+actions.insertAdjacentHTML('beforeend', `
+<button type="button"
+class="card-icon-btn card-large-btn"
+title="Make card bigger"
+aria-label="Make card bigger"
+aria-pressed="false"
+onclick="toggleCardLarge(this)">
+<span class="card-large-icon">⛶</span>
+</button>
+<button type="button"
+class="card-icon-btn card-collapse-btn"
+title="Hide card content"
+aria-label="Hide card content"
+aria-expanded="true"
+onclick="toggleCardCollapse(this)">
+<span class="card-collapse-icon">▾</span>
+</button>
+`);
+if (CARD_RENDERERS[panel.id]) {
+header.insertAdjacentHTML('afterend', buildCardRangeBar(panel.id));
+updateCardRangeNote(panel.id);
+}
+if (saved[panel.id]) {
+setCardCollapsed(panel, true, false);
+}
+});
+}
+document.addEventListener('keydown', function(event) {
+if (event.key !== 'Escape') {
+return;
+}
+if (document.querySelector('.pm-menu.open')) {
+closeAllCardMenus();
+return;
+}
+closeCardLarge();
+});
+if (document.readyState === 'loading') {
+document.addEventListener('DOMContentLoaded', enhanceDashboardCards);
+} else {
+enhanceDashboardCards();
+}
+// Called whenever fresh dashboard data arrives.
+function refreshPickerMonthPanel() {
+populatePickerMonthMenu();
+renderPickerMonthPanel();
+}
+function printPickerMonthPanel() {
+const cleanup = function() {
+document.body.classList.remove('pm-printing');
+window.removeEventListener('afterprint', cleanup);
+};
+document.body.classList.add('pm-printing');
+window.addEventListener('afterprint', cleanup);
+window.print();
+}
+function renderProductsTable(logs, items) {
+const productMap = {};
+const itemMap = {};
+items.forEach(function(item) {
+const barcode = cleanText(item.barcode);
+if (barcode) {
+itemMap[barcode] = item;
+}
+});
+logs.forEach(function(log) {
+const orderItems = parseOrderItems(log.rawItemsJson);
+orderItems.forEach(function(item) {
+const barcode = cleanText(
+item.barcode ||
+item.code ||
+item.sku ||
+item.itemCode
+);
+const name = cleanText(
+item.description ||
+item.name ||
+item.product ||
+(itemMap[barcode] && itemMap[barcode].description) ||
+barcode ||
+'Unknown product'
+);
+const key = barcode || name;
+if (!productMap[key]) {
+productMap[key] = {
+name: name,
+code: barcode,
+quantity: 0
+};
+}
+const quantity = Number(
+item.quantity ||
+item.qty ||
+item.amount ||
+1
+);
+productMap[key].quantity += Number.isFinite(quantity)
+? quantity
+: 1;
+});
+});
+const rows = Object.keys(productMap)
+.map(function(key) {
+return productMap[key];
+})
+.sort(function(a, b) {
+return b.quantity - a.quantity;
+})
+.slice(0, 8);
+if (!rows.length) {
+setEmpty('products-table', 'No product usage data yet.');
+return;
+}
+let html = `
+<table>
+<thead>
+<tr>
+<th>Product</th>
+<th>Code</th>
+<th>Picked</th>
+</tr>
+</thead>
+<tbody>
+`;
+rows.forEach(function(row) {
+html += `
+<tr>
+<td>${escapeHtml(row.name)}</td>
+<td>${escapeHtml(row.code || '—')}</td>
+<td>
+<span class="badge green">
+${formatNumber(row.quantity)}
+</span>
+</td>
+</tr>
+`;
+});
+html += '</tbody></table>';
+document.getElementById('products-table')
+.innerHTML = html;
+}
+function renderStockList(items) {
+const outOfStock = items.filter(function(item) {
+const values = [
+item.stock,
+item.quantity,
+item.qty,
+item.available,
+item.status
+];
+const hasQuantity = values.some(function(value) {
+return value !== undefined &&
+value !== null &&
+String(value).trim() !== '';
+});
+if (!hasQuantity) {
+return false;
+}
+const stockValue = Number(
+item.stock ||
+item.quantity ||
+item.qty ||
+item.available
+);
+const status = normalizeStatus(item.status);
+return stockValue === 0 ||
+status === 'out of stock' ||
+status === 'outofstock';
+});
+if (!outOfStock.length) {
+setEmpty(
+'stock-list',
+'No out-of-stock products detected.'
+);
+return;
+}
+const visible = outOfStock.slice(0, 8);
+document.getElementById('stock-list').innerHTML =
+visible.map(function(item) {
+const name = cleanText(
+item.description ||
+item.name ||
+item.sku ||
+item.barcode ||
+'Unnamed product'
+);
+const code = cleanText(
+item.sku ||
+item.barcode ||
+item.itemCode ||
+''
+);
+const quantity = item.stock ||
+item.quantity ||
+item.qty ||
+item.available ||
+0;
+return `
+<div class="stock-item">
+<div class="stock-item-main">
+<div class="stock-item-name">
+${escapeHtml(name)}
+</div>
+<div class="stock-item-code">
+${escapeHtml(code)}
+</div>
+</div>
+<div class="stock-number">
+${escapeHtml(String(quantity))}
+</div>
+</div>
+`;
+})
+.join('');
+}
+function renderTeamTable(recipients, logs) {
+if (!recipients.length) {
+setEmpty('team-table', 'No team profiles found.');
+return;
+}
+const rows = recipients.slice(0, 8);
+// Completed orders per person inside the selected date range.
+const orderCounts = {};
+(logs || []).forEach(function(log) {
+const status = normalizeStatus(log.status);
+if (
+status !== 'completed' &&
+status !== 'complete' &&
+status !== 'solved'
+) {
+return;
+}
+const key = cleanText(log.picker).toUpperCase();
+if (key) {
+orderCounts[key] = (orderCounts[key] || 0) + 1;
+}
+});
+let html = `
+<table>
+<thead>
+<tr>
+<th>Name</th>
+<th>Phone</th>
+<th>Orders</th>
+<th>Status</th>
+</tr>
+</thead>
+<tbody>
+`;
+rows.forEach(function(person) {
+const ordersDone = orderCounts[
+cleanText(person.name).toUpperCase()
+] || 0;
+html += `
+<tr>
+<td>${escapeHtml(
+person.name || 'Unnamed'
+)}</td>
+<td>${escapeHtml(
+person.phone || '—'
+)}</td>
+<td>${formatNumber(ordersDone)}</td>
+<td>
+<span class="badge green">Active</span>
+</td>
+</tr>
+`;
+});
+html += '</tbody></table>';
+document.getElementById('team-table')
+.innerHTML = html;
+}
+function renderLogsTable(logs) {
+if (!logs.length) {
+setEmpty('logs-table', 'No operations logs yet.');
+return;
+}
+const rows = logs.slice().reverse().slice(0, 12);
+let html = `
+<table class="log-table">
+<thead>
+<tr>
+<th>Order ID</th>
+<th>Time</th>
+<th>Picker</th>
+<th>Status</th>
+<th>Duration</th>
+</tr>
+</thead>
+<tbody>
+`;
+rows.forEach(function(log) {
+const status = cleanText(log.status) || 'Unknown';
+const normalized = normalizeStatus(status);
+const badgeClass =
+normalized === 'completed' ||
+normalized === 'complete' ||
+normalized === 'solved'
+? 'green'
+: normalized === 'cancelled' ||
+normalized === 'canceled'
+? 'red'
+: 'orange';
+html += `
+<tr>
+<td>${escapeHtml(
+log.orderId || '—'
+)}</td>
+<td>${escapeHtml(
+log.timestamp || '—'
+)}</td>
+<td>${escapeHtml(
+log.picker || '—'
+)}</td>
+<td>
+<span class="badge ${badgeClass}">
+${escapeHtml(status)}
+</span>
+</td>
+<td>${escapeHtml(
+log.minutesTaken
+? log.minutesTaken + ' min'
+: '—'
+)}</td>
+</tr>
+`;
+});
+html += '</tbody></table>';
+document.getElementById('logs-table')
+.innerHTML = html;
+}
+function drawActivityChart(logs) {
+const canvas = document.getElementById('activity-chart');
+const rect = canvas.getBoundingClientRect();
+const ratio = window.devicePixelRatio || 1;
+canvas.width = Math.max(rect.width * ratio, 300);
+canvas.height = Math.max(rect.height * ratio, 180);
+const ctx = canvas.getContext('2d');
+ctx.setTransform(ratio, 0, 0, ratio, 0, 0);
+const width = rect.width;
+const height = rect.height;
+ctx.clearRect(0, 0, width, height);
+const padding = {
+top: 16,
+right: 12,
+bottom: 32,
+left: 36
+};
+const chartWidth =
+width - padding.left - padding.right;
+const chartHeight =
+height - padding.top - padding.bottom;
+const days = [
+'Mon',
+'Tue',
+'Wed',
+'Thu',
+'Fri',
+'Sat',
+'Sun'
+];
+const values = days.map(function(day) {
+return logs.filter(function(log) {
+return getDayName(log.timestamp) === day;
+}).length;
+});
+const maximum = Math.max.apply(null, values.concat([1]));
+const yMax = Math.max(
+5,
+Math.ceil(maximum / 5) * 5
+);
+const colors = {
+grid: readCssColor('--chart-grid', 'rgba(162, 177, 230, 0.14)'),
+axis: readCssColor('--chart-axis', '#7885a9'),
+label: readCssColor('--chart-label', '#8793b6'),
+line: readCssColor('--chart-line', '#22d9df'),
+fill1: readCssColor('--chart-fill-1', 'rgba(24, 216, 223, 0.38)'),
+fill2: readCssColor('--chart-fill-2', 'rgba(24, 216, 223, 0.01)'),
+halo: readCssColor('--chart-halo', 'rgba(34, 217, 223, 0.25)')
+};
+ctx.strokeStyle = colors.grid;
+ctx.lineWidth = 1;
+for (let i = 0; i <= 4; i++) {
+const y = padding.top +
+chartHeight - (chartHeight * i / 4);
+ctx.beginPath();
+ctx.moveTo(padding.left, y);
+ctx.lineTo(width - padding.right, y);
+ctx.stroke();
+ctx.fillStyle = colors.axis;
+ctx.font = '10px system-ui';
+ctx.textAlign = 'right';
+ctx.fillText(
+Math.round(yMax * i / 4),
+padding.left - 8,
+y + 3
+);
+}
+const points = values.map(function(value, index) {
+return {
+x: padding.left +
+(chartWidth * index / (days.length - 1)),
+y: padding.top +
+chartHeight -
+(chartHeight * value / yMax)
+};
+});
+const gradient = ctx.createLinearGradient(
+0,
+padding.top,
+0,
+height
+);
+gradient.addColorStop(0, colors.fill1);
+gradient.addColorStop(1, colors.fill2);
+ctx.beginPath();
+ctx.moveTo(points[0].x, height - padding.bottom);
+points.forEach(function(point) {
+ctx.lineTo(point.x, point.y);
+});
+ctx.lineTo(
+points[points.length - 1].x,
+height - padding.bottom
+);
+ctx.closePath();
+ctx.fillStyle = gradient;
+ctx.fill();
+ctx.beginPath();
+points.forEach(function(point, index) {
+if (index === 0) {
+ctx.moveTo(point.x, point.y);
+} else {
+const previous = points[index - 1];
+const controlX =
+(previous.x + point.x) / 2;
+ctx.bezierCurveTo(
+controlX,
+previous.y,
+controlX,
+point.y,
+point.x,
+point.y
+);
+}
+});
+ctx.strokeStyle = colors.line;
+ctx.lineWidth = 3;
+ctx.stroke();
+points.forEach(function(point, index) {
+ctx.beginPath();
+ctx.arc(point.x, point.y, 4, 0, Math.PI * 2);
+ctx.fillStyle = colors.line;
+ctx.fill();
+ctx.beginPath();
+ctx.arc(point.x, point.y, 7, 0, Math.PI * 2);
+ctx.strokeStyle = colors.halo;
+ctx.lineWidth = 2;
+ctx.stroke();
+ctx.fillStyle = colors.label;
+ctx.font = '10px system-ui';
+ctx.textAlign = 'center';
+ctx.fillText(
+days[index],
+point.x,
+height - 10
+);
+});
+}
+function getDayName(value) {
+if (!value) {
+return '';
+}
+const parsed = new Date(value);
+if (!Number.isNaN(parsed.getTime())) {
+return [
+'Sun',
+'Mon',
+'Tue',
+'Wed',
+'Thu',
+'Fri',
+'Sat'
+][parsed.getDay()];
+}
+const text = String(value).toLowerCase();
+if (text.indexOf('mon') !== -1) return 'Mon';
+if (text.indexOf('tue') !== -1) return 'Tue';
+if (text.indexOf('wed') !== -1) return 'Wed';
+if (text.indexOf('thu') !== -1) return 'Thu';
+if (text.indexOf('fri') !== -1) return 'Fri';
+if (text.indexOf('sat') !== -1) return 'Sat';
+if (text.indexOf('sun') !== -1) return 'Sun';
+return '';
+}
+function parseOrderItems(value) {
+if (!value) {
+return [];
+}
+if (Array.isArray(value)) {
+return value;
+}
+try {
+const parsed = JSON.parse(value);
+return Array.isArray(parsed) ? parsed : [];
+} catch (error) {
+return [];
+}
+}
+function parseMinutes(value) {
+if (
+value === undefined ||
+value === null ||
+String(value).trim() === ''
+) {
+return null;
+}
+const number = Number(
+String(value).replace(/[^\d.-]/g, '')
+);
+return Number.isFinite(number)
+? number
+: null;
+}
+function formatAverageMinutes(logs) {
+const values = logs
+.map(function(log) {
+return parseMinutes(log.minutesTaken);
+})
+.filter(function(value) {
+return value !== null;
+});
+if (!values.length) {
+return '—';
+}
+const average = values.reduce(function(a, b) {
+return a + b;
+}, 0) / values.length;
+return Math.round(average) + 'm';
+}
+function normalizeStatus(value) {
+return cleanText(value)
+.toLowerCase()
+.replace(/\s+/g, ' ');
+}
+function cleanText(value) {
+if (
+value === undefined ||
+value === null
+) {
+return '';
+}
+return String(value).trim();
+}
+function formatNumber(value) {
+return Number(value || 0).toLocaleString();
+}
+function escapeHtml(value) {
+return String(value || '')
+.replace(/&/g, '&amp;')
+.replace(/</g, '&lt;')
+.replace(/>/g, '&gt;')
+.replace(/"/g, '&quot;')
+.replace(/'/g, '&#039;');
+}
+function setEmpty(elementId, message) {
+document.getElementById(elementId).innerHTML =
+'<div class="empty-state">' +
+escapeHtml(message) +
+'</div>';
+}
+function showLoading(show) {
+document.getElementById('loading')
+.style.display = show ? 'grid' : 'none';
+}
+function showToast(message) {
+const toast = document.getElementById('toast');
+toast.textContent = message;
+toast.classList.add('show');
+window.clearTimeout(showToast.timer);
+showToast.timer = window.setTimeout(function() {
+toast.classList.remove('show');
+}, 2800);
+}
+function updateDate() {
+const date = new Date();
+document.getElementById('current-date')
+.textContent = date.toLocaleDateString(
+undefined,
+{
+weekday: 'short',
+day: '2-digit',
+month: 'short',
+year: 'numeric'
+}
+);
+}
+function toggleFullScreen() {
+if (!document.fullscreenElement) {
+document.documentElement
+.requestFullscreen()
+.catch(function() {
+showToast(
+'Browser full-screen mode is unavailable.'
+);
+});
+} else {
+document.exitFullscreen();
+}
+}
+function openAdmin() {
+const url = getWebAppUrl();
+if (url) {
+window.open(url, '_top');
+} else {
+window.history.back();
+}
+}
+function getWebAppUrl() {
+return new URL('index.html', window.location.href).toString();
+}
+function scrollToTop() {
+document.querySelector('.main')
+.scrollTo({
+top: 0,
+behavior: 'smooth'
+});
+}
+function scrollToSection(id) {
+const element = document.getElementById(id);
+if (element) {
+element.scrollIntoView({
+behavior: 'smooth',
+block: 'start'
+});
+}
+}
+</script>
+</body>
+</html>
