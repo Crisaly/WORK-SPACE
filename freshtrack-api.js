@@ -11,7 +11,16 @@
   function s(v) { return String(v === undefined || v === null ? '' : v).trim(); }
 
   // ---------- first-run seed ----------
-  if (!localStorage.getItem(K.pickers)) save(K.pickers, [{ name: 'ADMIN', pin: '0000', phone: '' }]);
+  if (!localStorage.getItem(K.pickers)) save(K.pickers, []);
+  // The Matrix and Admin screens are unlocked by pickers named "Matrix" and "Admin".
+  // Make sure both always exist (default PIN 0000 - change it in the Data Manager).
+  (function () {
+    var p = load(K.pickers, []), ch = false;
+    ['Matrix', 'Admin'].forEach(function (n) {
+      if (!p.some(function (x) { return String(x.name).trim().toUpperCase() === n.toUpperCase(); })) { p.push({ name: n, pin: '0000', phone: '' }); ch = true; }
+    });
+    if (ch) save(K.pickers, p);
+  })();
   if (!localStorage.getItem(K.items)) save(K.items, [
     { barcode: '5202178009006', sku: '866314', description: 'OLYMPOS COTTAGE CHEESE 4% 180 g', imageUrl: '', location: '3' },
     { barcode: '5202178040177', sku: '829408', description: 'OLYMPOS KEFIR 1% 500 ml', imageUrl: '', location: '3' },
