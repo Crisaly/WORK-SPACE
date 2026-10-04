@@ -29,7 +29,7 @@
     if (document.body) show(); else document.addEventListener('DOMContentLoaded', show);
   }
   // ---------- cloud status badge (bottom-left) ----------
-  var badge, VERSION = 'cloud v3';
+  var badge, VERSION = 'cloud v5';
   function setStatus(ok, msg) {
     function show() {
       if (!badge) {
