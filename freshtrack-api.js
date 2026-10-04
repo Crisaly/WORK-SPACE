@@ -29,7 +29,7 @@
     if (document.body) show(); else document.addEventListener('DOMContentLoaded', show);
   }
   // ---------- cloud status badge (bottom-left) ----------
-  var badge, VERSION = 'cloud v6';
+  var badge, VERSION = 'cloud v7';
   function setStatus(ok, msg) {
     function show() {
       if (!badge) {
@@ -294,8 +294,14 @@
       list.forEach(function (r) {
         if (!r.barcode) return;
         var k = key(r.barcode), sig = k + '|' + s(r.sku) + '|' + s(r.description);
-        if (seen[sig]) { st.exactDup++; return; }
-        seen[sig] = 1;
+        if (seen[sig]) {
+          st.exactDup++;
+          var first = seen[sig];  // keep the first row, but fill its empty image/location from the duplicate
+          if (!first.imageUrl && r.imageUrl) first.imageUrl = r.imageUrl;
+          if (!first.location && r.location) first.location = r.location;
+          return;
+        }
+        seen[sig] = r;
         if (o[k]) { k = k + '__' + key(r.sku || String(Object.keys(o).length)); st.sameBarcodeKept++; }
         o[k] = r; st.imported++;
       });
