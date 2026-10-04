@@ -29,7 +29,7 @@
     if (document.body) show(); else document.addEventListener('DOMContentLoaded', show);
   }
   // ---------- cloud status badge (bottom-left) ----------
-  var badge, VERSION = 'cloud v5';
+  var badge, VERSION = 'cloud v6';
   function setStatus(ok, msg) {
     function show() {
       if (!badge) {
@@ -95,7 +95,7 @@
   function getItems(force) {
     if (!force && itemsCache && Date.now() - itemsCache.t < 30000) return Promise.resolve(itemsCache.list);
     return get('items').then(function (o) {
-      var list = Object.keys(o || {}).map(function (k) { var i = o[k]; return { barcode: s(i.barcode), sku: s(i.sku), description: s(i.description), imageUrl: s(i.imageUrl), location: s(i.location) }; });
+      var list = Object.keys(o || {}).filter(function (k) { return o[k]; }).map(function (k) { var i = o[k]; return { id: k, barcode: s(i.barcode), sku: s(i.sku), description: s(i.description), imageUrl: s(i.imageUrl), location: s(i.location) }; });
       itemsCache = { t: Date.now(), list: list };
       return list;
     });
@@ -287,11 +287,20 @@
     configured: configured,
     hashPin: hashPin,
     listItems: function () { return getItems(true); },
-    saveItem: function (rec) { dropItemsCache(); return put('items/' + key(rec.barcode), rec); },
-    deleteItem: function (barcode) { dropItemsCache(); return del('items/' + key(barcode)); },
+    saveItem: function (rec, id) { dropItemsCache(); var r = { barcode: s(rec.barcode), sku: s(rec.sku), description: s(rec.description), imageUrl: s(rec.imageUrl), location: s(rec.location) }; return put('items/' + (id || key(r.barcode)), r); },
+    deleteItem: function (id) { dropItemsCache(); return del('items/' + id); },
     importItems: function (list, replace) {
-      var o = {}; list.forEach(function (r) { if (r.barcode) o[key(r.barcode)] = r; });
-      dropItemsCache(); return replace ? put('items', o) : patch('items', o);
+      var o = {}, st = { rows: list.length, imported: 0, exactDup: 0, sameBarcodeKept: 0 }, seen = {};
+      list.forEach(function (r) {
+        if (!r.barcode) return;
+        var k = key(r.barcode), sig = k + '|' + s(r.sku) + '|' + s(r.description);
+        if (seen[sig]) { st.exactDup++; return; }
+        seen[sig] = 1;
+        if (o[k]) { k = k + '__' + key(r.sku || String(Object.keys(o).length)); st.sameBarcodeKept++; }
+        o[k] = r; st.imported++;
+      });
+      dropItemsCache();
+      return (replace ? put('items', o) : patch('items', o)).then(function () { return st; });
     },
     listPickers: function () {
       return ensureDefaults().then(function () { return get('pickers'); }).then(function (o) {
