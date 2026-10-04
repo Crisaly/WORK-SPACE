@@ -3,8 +3,8 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
 <meta name="theme-color" content="#0f1b2d">
 <title>FreshTrack - Data Manager</title>
-<script src="config.js?v=6"></script>
-<script src="freshtrack-api.js?v=6"></script>
+<script src="config.js?v=8"></script>
+<script src="freshtrack-api.js?v=8"></script>
 <style>
 *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
 :root{--bg:#0b1424;--card:#13233b;--line:#223656;--txt:#e8eefc;--mut:#8da2c4;--acc:#22d3ee;--ok:#10b981;--bad:#ef4444}
@@ -58,7 +58,7 @@ input,select,textarea{font-size:16px !important}html,body{max-width:100%;overflo
   <label class="file">Choose CSV file<input type="file" id="csv" accept=".csv,text/csv"></label>
   <label class="chk"><input type="checkbox" id="rep"> Replace all existing products</label></div>
  <div class="card"><h2>Products</h2>
-  <input type="search" id="q" placeholder="Search products...">
+  <input type="search" id="q" placeholder="Search name, barcode or item code...">
   <p class="cnt" id="cnt"></p><div id="tbl"></div></div>
 </div>
 
@@ -92,9 +92,14 @@ document.querySelectorAll('nav button').forEach(function(b){b.onclick=function()
 
 var ITEMS=[],EDITID=null;
 function drawProducts(){var q=$('q').value.toLowerCase();
- var f=ITEMS.filter(function(i){return !q||(i.barcode+i.sku+i.description+i.location).toLowerCase().indexOf(q)>-1});
- $('cnt').textContent=ITEMS.length+' products'+(q?' ('+f.length+' shown)':'');
- $('tbl').innerHTML=f.slice(0,200).map(function(i){return '<div class="item"><div class="thumb">'+(i.imageUrl?'<img src="'+esc(i.imageUrl)+'" referrerpolicy="no-referrer" onerror="this.remove()">':'&#128230;')+'</div><div class="info"><b>'+esc(i.description)+'</b><small>'+esc(i.barcode)+' &middot; '+esc(i.sku)+(i.location?' &middot; Loc '+esc(i.location):'')+'</small></div><div class="acts"><a href="#" data-e="'+esc(i.id)+'">Edit</a><a href="#" data-d="'+esc(i.id)+'" class="del">Del</a></div></div>'}).join('')}
+ var toks=q.split(/\s+/).filter(Boolean);
+ var f=ITEMS.filter(function(i){if(!toks.length)return true;
+  var hay=(i.description+' '+i.barcode+' '+i.sku+' '+i.location).toLowerCase(),nz=(i.barcode+' '+i.sku).toLowerCase().replace(/\b0+(?=\d)/g,'');
+  return toks.every(function(t){return hay.indexOf(t)>-1||nz.indexOf(t.replace(/^0+(?=\d)/,''))>-1})});
+ if(q)f.sort(function(a,b){var ea=(a.sku.toLowerCase()===q||a.barcode.toLowerCase()===q)?0:1,eb=(b.sku.toLowerCase()===q||b.barcode.toLowerCase()===q)?0:1;return ea-eb});
+ $('cnt').textContent=ITEMS.length+' products'+(q?' - '+f.length+' found':'');
+ if(q&&!f.length){$('tbl').innerHTML='<p class="hint">Nothing found for &quot;'+esc(q)+'&quot; in barcode, item code, name or location.</p>';return}
+ $('tbl').innerHTML=f.slice(0,200).map(function(i){return '<div class="item"><div class="thumb">'+(i.imageUrl?'<img src="'+esc(i.imageUrl)+'" referrerpolicy="no-referrer" onerror="this.remove()">':'&#128230;')+'</div><div class="info"><b>'+esc(i.description)+'</b><small>Barcode '+esc(i.barcode)+' &middot; Code '+esc(i.sku)+(i.location?' &middot; Loc '+esc(i.location):'')+'</small></div><div class="acts"><a href="#" data-e="'+esc(i.id)+'">Edit</a><a href="#" data-d="'+esc(i.id)+'" class="del">Del</a></div></div>'}).join('')}
 function loadProducts(){return C.listItems().then(function(l){ITEMS=l;drawProducts()}).catch(bad)}
 $('q').oninput=drawProducts;
 $('tbl').onclick=function(e){var t=e.target;
