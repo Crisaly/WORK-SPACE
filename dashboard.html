@@ -1,8 +1,8 @@
 <!DOCTYPE html>
 <html data-theme="light">
 <head>
-<script src="config.js?v=4"></script>
-<script src="freshtrack-api.js?v=4"></script>
+<script src="config.js?v=5"></script>
+<script src="freshtrack-api.js?v=5"></script>
 
 <base target="_top">
 <script>
@@ -10,8 +10,15 @@
 document.documentElement.setAttribute('data-theme', 'light');
 </script>
 <meta charset="UTF-8">
-<meta name="viewport"
-content="width=device-width, initial-scale=1.0">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+<style id="mobile-fix">
+*,*::before,*::after{box-sizing:border-box}
+html,body{max-width:100%;overflow-x:hidden;touch-action:manipulation}
+input,select,textarea{font-size:16px !important;touch-action:manipulation}
+button,a,summary,select{touch-action:manipulation}
+#pin-modal-input{min-height:48px}
+#pin-modal button{min-height:44px}
+</style>
 <title>FreshTrack Dashboard</title>
 <style>
 :root {
