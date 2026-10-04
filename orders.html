@@ -1,0 +1,102 @@
+<!DOCTYPE html>
+<html lang="en"><head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+<meta name="theme-color" content="#0b1424">
+<title>FreshTrack - Orders</title>
+<script src="config.js?v=3"></script>
+<script src="freshtrack-api.js?v=3"></script>
+<style>
+*,*::before,*::after{box-sizing:border-box}
+:root{--bg:#0b1424;--card:#13233b;--line:#223656;--txt:#e8eefc;--mut:#8da2c4;--acc:#22d3ee;--ok:#10b981;--bad:#ef4444;--act:#f59e0b}
+html,body{margin:0;max-width:100%;overflow-x:hidden;background:var(--bg);color:var(--txt);font-family:system-ui,-apple-system,"Segoe UI",sans-serif;touch-action:manipulation}
+button,a,input,summary{touch-action:manipulation;font-family:inherit}
+.app{display:flex;flex-direction:column;justify-content:space-between;height:100dvh;max-width:100%;padding:env(safe-area-inset-top) 0 env(safe-area-inset-bottom)}
+header{display:flex;align-items:center;gap:8px;padding:10px 12px}
+header h1{flex:1;margin:0;font-size:18px}
+.ib{min-width:48px;min-height:48px;border:0;border-radius:14px;background:var(--card);color:var(--acc);font-size:15px;font-weight:800;padding:0 14px;cursor:pointer;text-decoration:none;display:flex;align-items:center;justify-content:center}
+.tabs{display:grid;grid-template-columns:repeat(3,1fr);gap:6px;padding:0 12px 8px}
+.tab{min-height:56px;border:2px solid var(--line);border-radius:14px;background:var(--card);color:var(--mut);font-weight:800;font-size:12px;letter-spacing:.05em;text-transform:uppercase;cursor:pointer;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px}
+.tab b{font-size:20px;color:var(--txt)}
+.tab.on[data-s=active]{border-color:var(--act)}.tab.on[data-s=active] b{color:var(--act)}
+.tab.on[data-s=completed]{border-color:var(--ok)}.tab.on[data-s=completed] b{color:var(--ok)}
+.tab.on[data-s=cancelled]{border-color:var(--bad)}.tab.on[data-s=cancelled] b{color:var(--bad)}
+.search{padding:0 12px 8px}
+.search input{width:100%;min-height:48px;padding:0 14px;font-size:16px;border-radius:14px;border:1px solid var(--line);background:#0c1a2e;color:var(--txt);outline:none}
+main{flex:1;min-height:0;overflow-y:auto;overflow-x:hidden;padding:0 12px 8px;-webkit-overflow-scrolling:touch}
+.empty{text-align:center;color:var(--mut);padding:40px 10px;font-style:italic}
+.o{background:var(--card);border:1px solid var(--line);border-radius:16px;margin-bottom:10px;overflow:hidden}
+.o summary{list-style:none;display:flex;align-items:center;gap:10px;min-height:64px;padding:10px 12px;cursor:pointer}
+.o summary::-webkit-details-marker{display:none}
+.oid{font:800 14px ui-monospace,Menlo,monospace;color:#fbbf24;border:1px dashed #92400e;border-radius:8px;padding:4px 8px;white-space:nowrap}
+.meta{flex:1;min-width:0}.meta b{display:block;font-size:14px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.meta small{color:var(--mut);font-size:12px}
+.pill{font-size:11px;font-weight:800;padding:4px 8px;border-radius:999px;white-space:nowrap}
+.p-active{background:#78350f;color:#fcd34d}.p-completed{background:#064e3b;color:#6ee7b7}.p-cancelled{background:#7f1d1d;color:#fca5a5}
+.body{padding:0 12px 12px;border-top:1px solid var(--line)}
+.it{display:flex;justify-content:space-between;gap:8px;padding:8px 0;font-size:13px;border-bottom:1px solid #1b2f4d}
+.it span:first-child{min-width:0;word-break:break-word}.it small{color:var(--mut);white-space:nowrap}
+.st-Picked{color:#6ee7b7}.st-Out{color:#fca5a5}
+.del{width:100%;min-height:48px;margin-top:10px;border:0;border-radius:12px;background:var(--bad);color:#fff;font-size:15px;font-weight:800;cursor:pointer}
+footer{display:flex;gap:8px;padding:8px 12px 10px;border-top:1px solid var(--line);background:#0a1220}
+footer button{flex:1;min-height:52px;border:0;border-radius:14px;font-size:14px;font-weight:800;cursor:pointer;color:#fff}
+#clr{background:var(--bad)}#sel{background:#2a3f63}
+#msg{position:fixed;left:12px;right:12px;top:calc(env(safe-area-inset-top) + 8px);z-index:20;padding:12px 14px;border-radius:14px;font-weight:700;font-size:14px;display:none}
+#msg.ok{background:#065f46;display:block}#msg.bad{background:#7f1d1d;display:block}
+</style></head><body>
+<div class="app">
+ <div id="msg"></div>
+ <div>
+  <header><a class="ib" href="index.html">&larr;</a><h1>Manage Orders</h1><button class="ib" id="ref">&#8635;</button></header>
+  <div class="tabs">
+   <button class="tab on" data-s="active">Active<b id="n-active">0</b></button>
+   <button class="tab" data-s="completed">Completed<b id="n-completed">0</b></button>
+   <button class="tab" data-s="cancelled">Cancelled<b id="n-cancelled">0</b></button>
+  </div>
+  <div class="search"><input id="q" type="search" placeholder="Search order, picker or date..."></div>
+ </div>
+ <main id="list"><div class="empty">Loading...</div></main>
+ <footer><button id="sel">Select: OFF</button><button id="clr">Clear this tab</button></footer>
+</div>
+<script>
+var LOGS=[],TAB='active',SELECT=false,PICK={};
+function $(i){return document.getElementById(i)}
+function esc(x){return String(x==null?'':x).replace(/[&<>"]/g,function(c){return{'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]})}
+var _t;function say(t,bad){var m=$('msg');m.className=bad?'bad':'ok';m.textContent=t;clearTimeout(_t);_t=setTimeout(function(){m.className=''},3000)}
+function cat(l){var s=String(l.status||'').toLowerCase();return s==='completed'?'completed':s==='cancelled'?'cancelled':'active'}
+function items(l){try{return JSON.parse(l.rawItemsJson||'[]')}catch(e){return[]}}
+function load(manual){google.script.run.withSuccessHandler(function(r){
+  if(!r||!r.success)return say((r&&r.error)||'Could not load',1);
+  LOGS=(r.logs||[]).slice().reverse();draw();if(manual)say('Updated.')}).getInitialData()}
+function draw(){
+  var c={active:0,completed:0,cancelled:0};LOGS.forEach(function(l){c[cat(l)]++});
+  ['active','completed','cancelled'].forEach(function(k){$('n-'+k).textContent=c[k]});
+  var q=$('q').value.toLowerCase().trim();
+  var list=LOGS.filter(function(l){return cat(l)===TAB&&(!q||(l.orderId+' '+l.picker+' '+l.timestamp).toLowerCase().indexOf(q)>-1)});
+  if(!list.length){$('list').innerHTML='<div class="empty">No '+TAB+' orders.</div>';return}
+  $('list').innerHTML=list.map(function(l){
+    var it=items(l),done=it.filter(function(x){return x.pickerStatus&&x.pickerStatus!=='Pending'}).length;
+    var open=PICK[l.orderId]?' open':'';
+    return '<details class="o"'+open+'><summary>'+
+      (SELECT?'<input type="checkbox" class="ck" data-id="'+esc(l.orderId)+'"'+(PICK[l.orderId]?' checked':'')+' style="width:26px;height:26px">':'')+
+      '<span class="oid">'+esc(l.orderId)+'</span><span class="meta"><b>'+esc(l.picker||'-')+'</b><small>'+esc(l.timestamp)+' &middot; '+done+'/'+it.length+' items'+(l.minutesTaken?' &middot; '+esc(l.minutesTaken):'')+'</small></span>'+
+      '<span class="pill p-'+cat(l)+'">'+esc(l.status||'Pending')+'</span></summary><div class="body">'+
+      it.map(function(x){var s=x.pickerStatus||'Pending';return '<div class="it"><span>'+esc(x.description||x.barcode||'Item')+'</span><small class="'+(s==='Picked'?'st-Picked':s==='Out Of Stock'?'st-Out':'')+'">'+esc(x.qty||'')+' '+esc(x.unit||'')+' &middot; '+esc(s)+'</small></div>'}).join('')+
+      '<button class="del" data-id="'+esc(l.orderId)+'">Delete this order</button></div></details>'}).join('')}
+function remove(ids,label){if(!ids.length)return say('Nothing to delete.',1);
+  if(!confirm('Delete '+label+'? This cannot be undone.'))return;
+  google.script.run.withSuccessHandler(function(r){if(r&&r.success){ids.forEach(function(i){delete PICK[i]});say('Deleted '+r.deleted+'.');load()}else say((r&&r.error)||'Failed',1)})
+   .withFailureHandler(function(e){say(e.message,1)}).deleteOrders(ids)}
+$('list').addEventListener('click',function(e){var t=e.target;
+  if(t.classList.contains('del')){e.preventDefault();remove([t.dataset.id],'order '+t.dataset.id)}});
+$('list').addEventListener('change',function(e){var t=e.target;if(t.classList.contains('ck')){if(t.checked)PICK[t.dataset.id]=1;else delete PICK[t.dataset.id]}});
+document.querySelectorAll('.tab').forEach(function(b){b.onclick=function(){TAB=b.dataset.s;PICK={};document.querySelectorAll('.tab').forEach(function(x){x.classList.toggle('on',x===b)});draw()}});
+$('q').oninput=draw;$('ref').onclick=function(){load(true)};
+$('sel').onclick=function(){SELECT=!SELECT;PICK={};$('sel').textContent='Select: '+(SELECT?'ON':'OFF');draw()};
+$('clr').onclick=function(){
+  var sel=Object.keys(PICK);
+  if(SELECT&&sel.length)return remove(sel,sel.length+' selected order(s)');
+  var ids=LOGS.filter(function(l){return cat(l)===TAB}).map(function(l){return l.orderId});
+  remove(ids,'ALL '+ids.length+' '+TAB+' orders')};
+load();setInterval(function(){if(!document.hidden)load()},15000);
+</script></body></html>
