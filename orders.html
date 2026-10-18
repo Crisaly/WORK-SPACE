@@ -104,3 +104,27 @@ $('clr').onclick=function(){
   remove(ids,'ALL '+ids.length+' '+TAB+' orders')};
 load();setInterval(function(){if(!document.hidden)load()},15000);
 </script></body></html>
+<div class="security-card">
+  <div class="security-header">
+    <svg class="shield-icon" xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+      <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
+      <path d="m9 12 2 2 4-4"/>
+    </svg>
+    <span>Security & Privacy</span>
+  </div>
+
+  <ul class="security-list">
+    <li>
+      <strong>Client-side operation.</strong> This application operates entirely in your web browser. No inventory, order, or scanning data is transmitted to untrusted external servers.
+    </li>
+    <li>
+      <strong>No credentials captured.</strong> Authentication or local access token data remains strictly stored in local browser memory (`localStorage`).
+    </li>
+    <li>
+      <strong>HTTPS encrypted.</strong> All connections and local asset requests are encrypted end-to-end.
+    </li>
+    <li>
+      <strong>Camera & Scanner usage.</strong> Device camera access is used exclusively for barcode and QR code decoding in real time.
+    </li>
+  </ul>
+</div>
