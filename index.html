@@ -946,26 +946,66 @@ return { formatted: `${dateOnly}${timePart ? ' ' + timePart : ''}`, dateOnly: da
 const spaceParts = String(tsStr).trim().split(' ');
 return { formatted: tsStr, dateOnly: spaceParts[0] || tsStr, timeOnly: spaceParts[1] || '' };
 }
-function toggleNativeKeyboard() {
-const scanInput = document.getElementById('matrix-scan');
+// Keyboard is hidden by default (inputmode="none") and only shown while the
+// keyboard button is toggled on. It switches back to hidden when the field
+// loses focus or after an item is added, so Android never keeps it open.
+let KEYBOARD_ENABLED = false;
+function setKeypadButtonStyle(on) {
 const btn = document.getElementById('toggle-keypad-btn');
-if (!scanInput) return;
-if (scanInput.getAttribute('inputmode') === 'none') {
-scanInput.setAttribute('inputmode', 'text');
-scanInput.focus();
-if (btn) {
+if (!btn) return;
+if (on) {
 btn.classList.remove('bg-blue-50', 'hover:bg-blue-100', 'text-blue-700', 'border-blue-200');
 btn.classList.add('bg-blue-600', 'hover:bg-blue-700', 'text-white', 'border-blue-600');
-}
 } else {
-scanInput.setAttribute('inputmode', 'none');
-scanInput.blur();
-if (btn) {
 btn.classList.remove('bg-blue-600', 'hover:bg-blue-700', 'text-white', 'border-blue-600');
 btn.classList.add('bg-blue-50', 'hover:bg-blue-100', 'text-blue-700', 'border-blue-200');
 }
 }
+function hideNativeKeyboard(keepFocus) {
+const scanInput = document.getElementById('matrix-scan');
+KEYBOARD_ENABLED = false;
+setKeypadButtonStyle(false);
+if (!scanInput) return;
+scanInput.setAttribute('inputmode', 'none');
+scanInput.blur();
+if (keepFocus) {
+// Refocus with inputmode none so a hardware scanner still types into the field without opening the keyboard.
+setTimeout(() => { scanInput.focus(); }, 60);
 }
+}
+function toggleNativeKeyboard() {
+const scanInput = document.getElementById('matrix-scan');
+if (!scanInput) return;
+if (!KEYBOARD_ENABLED) {
+KEYBOARD_ENABLED = true;
+setKeypadButtonStyle(true);
+// Android only re-reads inputmode on a fresh focus, so blur first.
+scanInput.blur();
+scanInput.setAttribute('inputmode', 'text');
+setTimeout(() => { scanInput.focus(); }, 60);
+} else {
+hideNativeKeyboard(false);
+}
+}
+(function setupKeyboardGuard() {
+function init() {
+const scanInput = document.getElementById('matrix-scan');
+if (!scanInput) return;
+scanInput.setAttribute('inputmode', 'none');
+scanInput.addEventListener('focus', () => {
+if (!KEYBOARD_ENABLED) scanInput.setAttribute('inputmode', 'none');
+});
+scanInput.addEventListener('blur', () => {
+if (KEYBOARD_ENABLED) {
+KEYBOARD_ENABLED = false;
+setKeypadButtonStyle(false);
+}
+scanInput.setAttribute('inputmode', 'none');
+});
+}
+if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', init);
+else init();
+})();
 // ==========================================
 // CAMERA BARCODE SCANNER
 // Google Apps Script serves this page inside a sandboxed, opaque-origin
@@ -2234,7 +2274,7 @@ if (unitSelect) unitSelect.value = "box";
 }
 const qtyInput = document.getElementById('matrix-qty');
 if (qtyInput) qtyInput.value = "1";
-scanInput.focus();
+if (KEYBOARD_ENABLED) { hideNativeKeyboard(true); } else { scanInput.setAttribute('inputmode', 'none'); scanInput.focus(); }
 renderQueue();
 updateNativeSmsLink();
 }
