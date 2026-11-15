@@ -298,7 +298,7 @@ const USER_MODE = new URLSearchParams(window.location.search).get("mode") || "ad
 <div>
 <label class="block text-xs font-semibold text-gray-500 uppercase tracking-wider mb-1">Scan Barcode Field</label>
 <div class="relative">
-<input type="text" id="matrix-scan" inputmode="none" oninput="handleBarcodeLookup(this.value)" placeholder="Type code or scan..." class="w-full bg-gray-50 border border-gray-200 rounded-xl py-3 pl-10 pr-4 focus:ring-2 focus:ring-blue-500 outline-none text-base">
+<input type="text" id="matrix-scan" inputmode="none" virtualkeyboardpolicy="manual" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" oninput="handleBarcodeLookup(this.value)" placeholder="Type code or scan..." class="w-full bg-gray-50 border border-gray-200 rounded-xl py-3 pl-10 pr-4 focus:ring-2 focus:ring-blue-500 outline-none text-base">
 <i class="fa-solid fa-barcode absolute left-3.5 top-4 text-gray-400"></i>
 </div>
 <div class="flex items-center gap-2 mt-2">
@@ -958,10 +958,11 @@ KEYBOARD_ENABLED = false;
 setKeypadButtonStyle(false);
 if (!scanInput) return;
 scanInput.setAttribute('inputmode', 'none');
+try { if (navigator.virtualKeyboard) navigator.virtualKeyboard.hide(); } catch (e) {}
 scanInput.blur();
 if (keepFocus) {
 // Refocus with inputmode none so a hardware scanner still types into the field without opening the keyboard.
-setTimeout(() => { scanInput.focus(); }, 60);
+setTimeout(() => { focusScanNoKeyboard(); }, 60);
 }
 }
 function toggleNativeKeyboard() {
@@ -972,19 +973,50 @@ KEYBOARD_ENABLED = true;
 setKeypadButtonStyle(true);
 // Android only re-reads inputmode on a fresh focus, so blur first.
 scanInput.blur();
+scanInput.removeAttribute('readonly');
 scanInput.setAttribute('inputmode', 'text');
-setTimeout(() => { scanInput.focus(); }, 60);
+setTimeout(() => {
+scanInput.focus();
+try { if (navigator.virtualKeyboard) navigator.virtualKeyboard.show(); } catch (e) {}
+}, 60);
 } else {
 hideNativeKeyboard(false);
 }
+}
+// Focus the scan field WITHOUT opening the keyboard. Some devices (Zebra
+// scanners with Enterprise/Gboard keyboards) ignore inputmode="none", so the
+// field is made readonly while it takes focus, then released again so the
+// hardware scanner (DataWedge keystrokes) can still type into it.
+function focusScanNoKeyboard() {
+const el = document.getElementById('matrix-scan');
+if (!el || KEYBOARD_ENABLED) return;
+el.setAttribute('inputmode', 'none');
+el.setAttribute('readonly', 'readonly');
+try { el.focus({ preventScroll: true }); } catch (e) { el.focus(); }
+try { if (navigator.virtualKeyboard) navigator.virtualKeyboard.hide(); } catch (e) {}
+setTimeout(() => { if (!KEYBOARD_ENABLED) el.removeAttribute('readonly'); }, 250);
 }
 (function setupKeyboardGuard() {
 function init() {
 const scanInput = document.getElementById('matrix-scan');
 if (!scanInput) return;
 scanInput.setAttribute('inputmode', 'none');
+try { if (navigator.virtualKeyboard) navigator.virtualKeyboard.overlaysContent = false; } catch (e) {}
+// Tapping the field must not open the keyboard unless the keyboard button was pressed.
+const block = (ev) => {
+if (KEYBOARD_ENABLED) return;
+ev.preventDefault();
+focusScanNoKeyboard();
+};
+scanInput.addEventListener('touchstart', block, { passive: false });
+scanInput.addEventListener('mousedown', block);
 scanInput.addEventListener('focus', () => {
-if (!KEYBOARD_ENABLED) scanInput.setAttribute('inputmode', 'none');
+if (!KEYBOARD_ENABLED) {
+scanInput.setAttribute('inputmode', 'none');
+scanInput.setAttribute('readonly', 'readonly');
+try { if (navigator.virtualKeyboard) navigator.virtualKeyboard.hide(); } catch (e) {}
+setTimeout(() => { if (!KEYBOARD_ENABLED) scanInput.removeAttribute('readonly'); }, 250);
+}
 });
 scanInput.addEventListener('blur', () => {
 if (KEYBOARD_ENABLED) {
@@ -2139,7 +2171,7 @@ if (banner) banner.classList.add('hidden');
 if (batchScanIdleTimer) { clearTimeout(batchScanIdleTimer); batchScanIdleTimer = null; }
 if (BATCH_SCAN_COUNT > 0) playSoundEffect('finish');
 }
-if (scanInput) { scanInput.value = ""; scanInput.focus(); }
+if (scanInput) { scanInput.value = ""; focusScanNoKeyboard(); }
 handleBarcodeLookup("");
 }
 function updateBatchScanCounter() {
@@ -2205,7 +2237,7 @@ playSoundEffect('error');
 fb.innerText = `No match for "${trimmed}" - skipped, keep scanning.`;
 fb.className = "w-full bg-red-50 border border-red-300 text-red-700 rounded-xl py-3 px-4 min-h-[48px] text-sm font-semibold flex items-center";
 liveInput.value = "";
-liveInput.focus();
+focusScanNoKeyboard();
 }
 }, BATCH_SCAN_UNKNOWN_TIMEOUT_MS);
 }
@@ -2255,7 +2287,7 @@ if (unitSelect) unitSelect.value = "box";
 }
 const qtyInput = document.getElementById('matrix-qty');
 if (qtyInput) qtyInput.value = "1";
-if (KEYBOARD_ENABLED) { hideNativeKeyboard(true); } else { scanInput.setAttribute('inputmode', 'none'); scanInput.focus(); }
+if (KEYBOARD_ENABLED) { hideNativeKeyboard(true); } else { focusScanNoKeyboard(); }
 renderQueue();
 updateNativeSmsLink();
 }
